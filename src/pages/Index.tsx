@@ -116,44 +116,46 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Layout de duas colunas com o player fixo */}
-      <div className="flex flex-col md:flex-row h-[calc(100vh-61px)]">
-        {/* Player de vídeo fixo à esquerda em telas médias ou maiores */}
-        <div className="md:w-1/2 lg:w-3/5 md:sticky md:top-[61px] md:self-start md:h-[calc(100vh-61px)] p-4">
+      {/* Layout estilo Pluto TV: player fixo no topo e menu de navegação abaixo */}
+      <div className="flex flex-col w-full">
+        {/* Player de vídeo fixo no topo */}
+        <div className="sticky top-[61px] z-10 w-full bg-black">
           {activeChannel ? (
-            <div className="h-full flex flex-col">
+            <div className="w-full">
               <VideoPlayer channel={activeChannel} />
-              <div className="mt-3 bg-card rounded-lg p-3 border border-border">
+              <div className="bg-card p-3 border-b border-border">
                 <h2 className="font-semibold text-lg">{activeChannel.name}</h2>
                 <p className="text-sm text-muted-foreground">{activeChannel.description}</p>
               </div>
             </div>
           ) : (
-            <div className="w-full aspect-video bg-muted/50 rounded-lg flex items-center justify-center">
+            <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
               <p className="text-muted-foreground">Nenhum canal selecionado</p>
             </div>
           )}
         </div>
 
-        {/* Conteúdo rolável à direita */}
-        <div className="md:w-1/2 lg:w-2/5 md:overflow-y-auto md:h-[calc(100vh-61px)] p-4">
-          {/* Categories & Navigation */}
-          <section className="mb-6">
-            <Navigation
-              activeCategory={activeCategory}
-              onSelectCategory={handleSelectCategory}
-            />
-          </section>
+        {/* Conteúdo rolável abaixo do player */}
+        <div className="w-full flex-grow overflow-y-auto">
+          <div className="tv-container py-4">
+            {/* Navigation */}
+            <section className="mb-6">
+              <Navigation
+                activeCategory={activeCategory}
+                onSelectCategory={handleSelectCategory}
+              />
+            </section>
 
-          {/* Channel grid */}
-          <section>
-            <ChannelGrid
-              channels={channels}
-              activeCategory={activeCategory}
-              onSelectChannel={handleSelectChannel}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          </section>
+            {/* Channel grid */}
+            <section className="mb-10">
+              <ChannelGrid
+                channels={channels}
+                activeCategory={activeCategory}
+                onSelectChannel={handleSelectChannel}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            </section>
+          </div>
         </div>
       </div>
 

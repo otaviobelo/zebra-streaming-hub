@@ -147,7 +147,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full max-h-[70vh] bg-black rounded-lg overflow-hidden group flex items-center justify-center"
+      className="relative w-full aspect-video bg-black overflow-hidden group flex items-center justify-center"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >

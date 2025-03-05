@@ -10,7 +10,7 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ activeCategory, onSelectCategory }) => {
   return (
-    <div className="overflow-x-auto scrollbar-none pb-2">
+    <div className="overflow-x-auto scrollbar-none pb-2 border-b border-border mb-4">
       <div className="flex items-center space-x-1 min-w-max">
         {categories.map(category => (
           <button
