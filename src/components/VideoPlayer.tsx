@@ -147,17 +147,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
   return (
     <div 
       ref={containerRef}
-      className="relative w-full aspect-video bg-black overflow-hidden group flex items-center justify-center"
+      className="relative w-full bg-black overflow-hidden group"
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <video
-        ref={videoRef}
-        className="w-full h-full object-contain"
-        autoPlay
-        playsInline
-        onClick={togglePlay}
-      />
+      <div className="mx-auto max-w-5xl aspect-video flex items-center justify-center">
+        <video
+          ref={videoRef}
+          className="w-full h-full object-contain"
+          autoPlay
+          playsInline
+          onClick={togglePlay}
+        />
+      </div>
       
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 text-white text-center p-4" onClick={togglePlay}>
