@@ -8,13 +8,58 @@ interface ChannelCardProps {
   channel: Channel;
   onClick: (channel: Channel) => void;
   onToggleFavorite: (channelId: string) => void;
+  displayAsList?: boolean;
 }
 
-const ChannelCard: React.FC<ChannelCardProps> = ({ channel, onClick, onToggleFavorite }) => {
+const ChannelCard: React.FC<ChannelCardProps> = ({ 
+  channel, 
+  onClick, 
+  onToggleFavorite,
+  displayAsList = false
+}) => {
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onToggleFavorite(channel.id);
   };
+
+  if (displayAsList) {
+    return (
+      <div 
+        className="channel-list-item cursor-pointer animate-scale-in"
+        onClick={() => onClick(channel)}
+      >
+        <div className="flex items-center">
+          <div className="w-24 h-16 mr-4 relative flex-shrink-0">
+            <img 
+              src={channel.thumbnailUrl} 
+              alt={channel.name}
+              className="w-full h-full object-cover rounded-md"
+              loading="lazy"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = `https://placehold.co/400x225/beige/333333?text=${encodeURIComponent(channel.name)}`;
+              }}
+            />
+          </div>
+          <div className="flex-grow">
+            <h3 className="font-medium">{channel.name}</h3>
+            <p className="text-sm text-muted-foreground line-clamp-2">{channel.description}</p>
+          </div>
+          <button 
+            className="ml-2 p-1.5 rounded-full text-muted-foreground hover:text-primary transition-colors"
+            onClick={handleFavoriteClick}
+            aria-label={channel.isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+          >
+            {channel.isFavorite ? (
+              <Star size={20} className="fill-yellow-400 text-yellow-400" />
+            ) : (
+              <StarOff size={20} />
+            )}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 

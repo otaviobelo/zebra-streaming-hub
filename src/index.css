@@ -82,6 +82,10 @@
     @apply relative overflow-hidden rounded-lg bg-card border border-border/60 transition-all duration-300 hover:border-primary/50 hover:shadow-md;
   }
 
+  .channel-list-item {
+    @apply relative p-3 rounded-lg bg-card border border-border/60 transition-all duration-300 hover:border-primary/50 hover:bg-card/80 hover:shadow-md;
+  }
+
   .channel-card:hover .channel-info {
     @apply translate-y-0 opacity-100;
   }

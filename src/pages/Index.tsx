@@ -135,26 +135,30 @@ const Index = () => {
           )}
         </div>
 
-        {/* Conteúdo rolável abaixo do player */}
+        {/* Conteúdo rolável abaixo do player - Nova organização com menu à esquerda */}
         <div className="w-full flex-grow overflow-y-auto">
           <div className="tv-container py-4">
-            {/* Navigation */}
-            <section className="mb-6">
-              <Navigation
-                activeCategory={activeCategory}
-                onSelectCategory={handleSelectCategory}
-              />
-            </section>
+            <div className="flex flex-col md:flex-row">
+              {/* Navigation - agora à esquerda */}
+              <section className="md:w-64 flex-shrink-0 mb-6 md:mb-0 md:mr-6">
+                <Navigation
+                  activeCategory={activeCategory}
+                  onSelectCategory={handleSelectCategory}
+                  isVertical={true}
+                />
+              </section>
 
-            {/* Channel grid */}
-            <section className="mb-10">
-              <ChannelGrid
-                channels={channels}
-                activeCategory={activeCategory}
-                onSelectChannel={handleSelectChannel}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            </section>
+              {/* Channel grid - canais em lista vertical */}
+              <section className="flex-grow mb-10">
+                <ChannelGrid
+                  channels={channels}
+                  activeCategory={activeCategory}
+                  onSelectChannel={handleSelectChannel}
+                  onToggleFavorite={handleToggleFavorite}
+                  displayAsList={true}
+                />
+              </section>
+            </div>
           </div>
         </div>
       </div>
