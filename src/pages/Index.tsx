@@ -141,6 +141,18 @@ const Index = () => {
       </header>
 
       <div className="flex flex-col">
+        {/* Fixed navigation above the player */}
+        <div className="fixed-nav-area w-full">
+          <Navigation
+            activeCategory={activeCategory}
+            onSelectCategory={handleSelectCategory}
+            isFixed={true}
+          />
+        </div>
+
+        {/* Space to push content below fixed navigation */}
+        <div className="nav-spacer"></div>
+
         {/* Fixed video player area */}
         <div className="fixed-player-area w-full bg-black">
           <div className="tv-container py-3">
@@ -169,20 +181,8 @@ const Index = () => {
         {/* Space to push content below fixed player */}
         <div className="player-spacer"></div>
 
-        {/* Fixed navigation below the player */}
-        <div className="fixed-nav-area w-full">
-          <Navigation
-            activeCategory={activeCategory}
-            onSelectCategory={handleSelectCategory}
-            isFixed={true}
-          />
-        </div>
-
-        {/* Space to push content below fixed navigation */}
-        <div className="nav-spacer"></div>
-
         {/* Scrollable channel grid section */}
-        <div className="flex-grow overflow-y-auto pt-4 channel-list-container">
+        <div className="flex-grow overflow-y-auto channel-list-container">
           <div className="tv-container pb-20">
             <ChannelGrid
               channels={channels}
