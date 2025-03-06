@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Tv } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import VideoPlayer from '@/components/VideoPlayer';
 import ChannelGrid from '@/components/ChannelGrid';
 import SearchBar from '@/components/SearchBar';
@@ -21,7 +22,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
-  // Initialize with first channel
+  // Initialize with channels
   useEffect(() => {
     const initialChannels = getChannelsWithFavorites();
     setChannels(initialChannels);
@@ -34,8 +35,6 @@ const Index = () => {
   // Handle channel selection
   const handleSelectChannel = (channel: Channel) => {
     setActiveChannel(channel);
-    
-    // Não precisamos mais rolar para o topo já que o player ficará fixo
     
     toast({
       title: "Canal alterado",
@@ -109,8 +108,16 @@ const Index = () => {
               <Tv className="w-6 h-6 text-primary" />
               <h1 className="text-xl font-semibold">TV Zebra</h1>
             </div>
-            <div className="w-full max-w-xs">
-              <SearchBar onSearch={handleSearch} />
+            <div className="flex items-center space-x-4">
+              <div className="w-full max-w-xs">
+                <SearchBar onSearch={handleSearch} />
+              </div>
+              <Link 
+                to="/admin" 
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Admin
+              </Link>
             </div>
           </div>
         </div>
@@ -139,7 +146,7 @@ const Index = () => {
         <div className="w-full flex-grow overflow-y-auto">
           <div className="tv-container py-4">
             <div className="flex flex-col md:flex-row">
-              {/* Navigation - agora à esquerda */}
+              {/* Navigation - agora à esquerda e fixada */}
               <section className="md:w-64 flex-shrink-0 mb-6 md:mb-0 md:mr-6">
                 <Navigation
                   activeCategory={activeCategory}

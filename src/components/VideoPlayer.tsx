@@ -18,6 +18,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
   const [error, setError] = useState<string | null>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Check fullscreen change
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -115,6 +125,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen().then(() => {
         setIsFullscreen(true);
+        // Fix for Safari: trigger a reflow
+        setTimeout(() => {
+          if (containerRef.current) {
+            const videoElem = containerRef.current.querySelector('video');
+            if (videoElem) {
+              videoElem.style.width = '100%';
+              videoElem.style.height = '100%';
+              videoElem.style.objectFit = 'contain';
+            }
+          }
+        }, 100);
       }).catch(err => {
         console.error('Error attempting to enable fullscreen:', err);
       });
@@ -147,14 +168,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
   return (
     <div 
       ref={containerRef}
-      className="relative w-full bg-black overflow-hidden group"
+      className={`relative w-full bg-black overflow-hidden group ${
+        isFullscreen ? 'fixed inset-0 z-50 flex items-center justify-center' : ''
+      }`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="mx-auto max-w-5xl aspect-video flex items-center justify-center">
+      <div className={`mx-auto max-w-5xl ${isFullscreen ? 'w-full h-full' : 'aspect-video'} flex items-center justify-center`}>
         <video
           ref={videoRef}
-          className="w-full h-full object-contain"
+          className={`max-w-full h-full object-contain ${isFullscreen ? 'w-full h-full' : ''}`}
           autoPlay
           playsInline
           onClick={togglePlay}

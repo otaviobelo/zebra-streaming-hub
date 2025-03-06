@@ -1,8 +1,6 @@
-
 import React from 'react';
 import { Channel } from '@/lib/types';
 import { Star, StarOff } from 'lucide-react';
-import { toggleFavoriteChannel } from '@/utils/channelData';
 
 interface ChannelCardProps {
   channel: Channel;
@@ -29,15 +27,15 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         onClick={() => onClick(channel)}
       >
         <div className="flex items-center">
-          <div className="w-24 h-16 mr-4 relative flex-shrink-0">
+          <div className="w-12 h-12 mr-4 relative flex-shrink-0 bg-white/30 rounded flex items-center justify-center overflow-hidden">
             <img 
-              src={channel.thumbnailUrl} 
+              src={channel.logoUrl || channel.thumbnailUrl} 
               alt={channel.name}
-              className="w-full h-full object-cover rounded-md"
+              className="max-w-full max-h-full object-contain"
               loading="lazy"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = `https://placehold.co/400x225/beige/333333?text=${encodeURIComponent(channel.name)}`;
+                target.src = `https://placehold.co/120x120/beige/333333?text=${encodeURIComponent(channel.name[0])}`;
               }}
             />
           </div>

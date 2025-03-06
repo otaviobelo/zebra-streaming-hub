@@ -4,6 +4,7 @@ export interface Channel {
   name: string;
   streamUrl: string;
   thumbnailUrl: string;
+  logoUrl?: string;
   category: string;
   description: string;
   isFavorite?: boolean;
@@ -12,4 +13,9 @@ export interface Channel {
 export type Category = {
   id: string;
   name: string;
+}
+
+export interface AdminCredentials {
+  username: string;
+  password: string;
 }

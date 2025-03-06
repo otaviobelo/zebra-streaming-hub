@@ -1,5 +1,5 @@
 
-import { Channel, Category } from '@/lib/types';
+import { Channel, Category, AdminCredentials } from '@/lib/types';
 
 export const categories: Category[] = [
   { id: 'all', name: 'Todos' },
@@ -11,12 +11,39 @@ export const categories: Category[] = [
   { id: 'movies', name: 'Filmes' },
 ];
 
-export const channels: Channel[] = [
+export const adminCredentials: AdminCredentials = {
+  username: "GOLFINHO",
+  password: "ZEBRA"
+};
+
+// Get all channels from localStorage or use default ones
+export const getInitialChannels = (): Channel[] => {
+  try {
+    const storedChannels = localStorage.getItem('tvzebra-channels');
+    return storedChannels ? JSON.parse(storedChannels) : defaultChannels;
+  } catch (error) {
+    console.error('Error getting channels:', error);
+    return defaultChannels;
+  }
+};
+
+// Save channels to localStorage
+export const saveChannels = (channels: Channel[]): void => {
+  try {
+    localStorage.setItem('tvzebra-channels', JSON.stringify(channels));
+  } catch (error) {
+    console.error('Error saving channels:', error);
+  }
+};
+
+// Default channels
+const defaultChannels: Channel[] = [
   {
     id: '1',
     name: 'TV Brasil',
     streamUrl: 'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/chunklist.m3u8',
     thumbnailUrl: 'https://logodownload.org/wp-content/uploads/2017/11/tv-brasil-logo.png',
+    logoUrl: 'https://seeklogo.com/images/S/sbt-logo-3D30D31294-seeklogo.com.png',
     category: 'news',
     description: 'Canal público nacional com programação educativa, cultural e jornalística.'
   },
@@ -25,6 +52,7 @@ export const channels: Channel[] = [
     name: 'Amazon Sat',
     streamUrl: 'https://amazonsat.brasilstream.com.br/hls/amazonsat/index.m3u8',
     thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Amazon_sat_logo.png/640px-Amazon_sat_logo.png',
+    logoUrl: 'https://portalamazonia.com/wp-content/uploads/2022/05/b2ap3_large_atual-logo.jpg',
     category: 'entertainment',
     description: 'Canal com foco em conteúdo da região amazônica e programação variada.'
   },
@@ -33,6 +61,7 @@ export const channels: Channel[] = [
     name: 'Rede Minas',
     streamUrl: 'https://8hzcavccys.zoeweb.tv/redeminas/ngrp:redeminas_all/chunklist_b2179072.m3u8',
     thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Rede_Minas_logo.svg/500px-Rede_Minas_logo.svg.png',
+    logoUrl: 'https://redeminas.tv/wp-content/uploads/2014/09/RedeMinas.png',
     category: 'entertainment',
     description: 'Canal regional de Minas Gerais com programação cultural e educativa.'
   },
@@ -41,15 +70,17 @@ export const channels: Channel[] = [
     name: 'ISTV',
     streamUrl: 'https://video08.logicahost.com.br/istvnacional/srt.stream/chunklist_w745016844.m3u8',
     thumbnailUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRvR1NdbW7iVqCKc5e5TFcZEJCIQxVcyWlmw30xsrNIB9E1GnfL8UiMPfnHzOGvXfpCq4Y&usqp=CAU',
+    logoUrl: 'https://www.istv.com.br/static/media/Logo_ISTV_01.0b00a8e55712712e3890.png',
     category: 'entertainment',
     description: 'Canal independente com programação variada de entretenimento.'
   },
-  // Adding additional placeholder channels for a better UI demo
+  // Additional placeholder channels
   {
     id: '5',
     name: 'Sports Live',
     streamUrl: 'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/chunklist.m3u8',
     thumbnailUrl: 'https://placehold.co/400x225/FFA07A/ffffff?text=Sports+Live',
+    logoUrl: 'https://placehold.co/120x120/FFA07A/ffffff?text=SL',
     category: 'sports',
     description: 'Canal dedicado a transmissões esportivas ao vivo.'
   },
@@ -58,6 +89,7 @@ export const channels: Channel[] = [
     name: 'Music Hits',
     streamUrl: 'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/chunklist.m3u8',
     thumbnailUrl: 'https://placehold.co/400x225/6495ED/ffffff?text=Music+Hits',
+    logoUrl: 'https://placehold.co/120x120/6495ED/ffffff?text=MH',
     category: 'music',
     description: 'Os melhores clipes musicais e shows ao vivo.'
   },
@@ -66,6 +98,7 @@ export const channels: Channel[] = [
     name: 'Documentários HD',
     streamUrl: 'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/chunklist.m3u8',
     thumbnailUrl: 'https://placehold.co/400x225/90EE90/333333?text=Documentários',
+    logoUrl: 'https://placehold.co/120x120/90EE90/333333?text=DOC',
     category: 'documentary',
     description: 'Os melhores documentários em alta definição.'
   },
@@ -74,6 +107,7 @@ export const channels: Channel[] = [
     name: 'Cine Clássicos',
     streamUrl: 'https://cdn.live.br1.jmvstream.com/w/LVW-10801/LVW10801_Xvg4R0u57n/chunklist.m3u8',
     thumbnailUrl: 'https://placehold.co/400x225/FFD700/333333?text=Cine+Clássicos',
+    logoUrl: 'https://placehold.co/120x120/FFD700/333333?text=CC',
     category: 'movies',
     description: 'Filmes clássicos que marcaram época.'
   },
@@ -105,10 +139,29 @@ export const toggleFavoriteChannel = (channelId: string): string[] => {
   }
 };
 
+// Add a new channel
+export const addChannel = (channel: Omit<Channel, "id" | "isFavorite">): Channel[] => {
+  try {
+    const channels = getChannelsWithFavorites();
+    const newChannel: Channel = {
+      ...channel,
+      id: Date.now().toString(),
+      isFavorite: false
+    };
+    
+    const updatedChannels = [...channels, newChannel];
+    saveChannels(updatedChannels);
+    return updatedChannels;
+  } catch (error) {
+    console.error('Error adding channel:', error);
+    return getChannelsWithFavorites();
+  }
+};
+
 // Get channels with favorite status
 export const getChannelsWithFavorites = (): Channel[] => {
   const favorites = getFavoriteChannels();
-  return channels.map(channel => ({
+  return getInitialChannels().map(channel => ({
     ...channel,
     isFavorite: favorites.includes(channel.id)
   }));
