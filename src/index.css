@@ -112,11 +112,12 @@
   }
   
   .player-spacer {
-    @apply pt-[calc(56.25vw*0.35+90px)] md:pt-[calc(56.25vw*0.35*0.8+90px)] lg:pt-[calc(56.25vw*0.35*0.7+90px)] xl:pt-[calc(56.25vw*0.35*0.6+90px)];
+    @apply pt-[calc(56.25vw*0.32+90px)] md:pt-[calc(56.25vw*0.32*0.8+90px)] lg:pt-[calc(56.25vw*0.32*0.7+90px)] xl:pt-[calc(56.25vw*0.32*0.6+90px)];
   }
   
   .fixed-nav-area {
-    @apply fixed top-16 left-0 right-0 z-20;
+    @apply fixed left-0 right-0 z-20;
+    top: 64px;
   }
   
   .nav-spacer {
@@ -124,8 +125,13 @@
   }
   
   .channel-list-container {
-    @apply pt-4 pb-20;
-    margin-top: 60px;
+    @apply pt-6 pb-20 overflow-y-auto;
+    height: calc(100vh - 380px);
+    margin-top: 20px;
+  }
+
+  .channel-description {
+    @apply bg-black text-white p-3 border-b border-border/20;
   }
 }
 

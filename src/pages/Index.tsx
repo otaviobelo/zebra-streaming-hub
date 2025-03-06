@@ -164,9 +164,9 @@ const Index = () => {
                     onPrevChannel={handlePrevChannel}
                     onNextChannel={handleNextChannel}
                   />
-                  <div className="bg-card p-3 border-b border-border">
+                  <div className="channel-description">
                     <h2 className="font-semibold text-lg">{activeChannel.name}</h2>
-                    <p className="text-sm text-muted-foreground">{activeChannel.description}</p>
+                    <p className="text-sm text-white/80">{activeChannel.description}</p>
                   </div>
                 </div>
               ) : (
@@ -182,8 +182,8 @@ const Index = () => {
         <div className="player-spacer"></div>
 
         {/* Scrollable channel grid section */}
-        <div className="flex-grow overflow-y-auto channel-list-container">
-          <div className="tv-container pb-20">
+        <div className="channel-list-container">
+          <div className="tv-container">
             <ChannelGrid
               channels={channels}
               activeCategory={activeCategory}
