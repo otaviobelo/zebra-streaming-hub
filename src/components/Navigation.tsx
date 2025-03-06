@@ -29,9 +29,8 @@ const Navigation: React.FC<NavigationProps> = ({
 
       {/* Navigation menu */}
       <div className={`
-        ${isFixed ? 'sticky top-[61px] z-10 bg-background/95 backdrop-blur-md border-b border-border py-2' : ''}
-        ${mobileMenuOpen ? 'fixed inset-0 z-20 bg-background/95 pt-20 px-4' : 'hidden md:block'}
-        w-full
+        nav-wrapper bg-background/95 backdrop-blur-md border-b border-border py-2 w-full z-20
+        ${mobileMenuOpen ? 'fixed inset-0 pt-20 px-4' : 'hidden md:block'}
       `}>
         <div className="tv-container">
           <div className="flex items-center space-x-1 overflow-x-auto pb-2 md:pb-0 scrollbar-thin">

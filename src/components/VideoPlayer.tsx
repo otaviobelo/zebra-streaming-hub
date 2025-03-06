@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import { Channel } from '@/lib/types';
@@ -186,10 +187,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel, onPrevChannel, onNex
         </button>
       )}
       
-      <div className={`w-full mx-auto ${isFullscreen ? 'h-full' : 'aspect-video'}`}>
+      <div className={`w-full mx-auto ${isFullscreen ? 'h-full flex items-center justify-center' : 'aspect-video'}`}>
         <video
           ref={videoRef}
-          className={`w-full h-full object-contain mx-auto ${isFullscreen ? 'max-h-screen' : ''}`}
+          className={`${isFullscreen ? 'w-full h-full object-contain' : 'max-w-full max-h-full mx-auto object-contain'}`}
           autoPlay
           playsInline
           onClick={togglePlay}

@@ -105,6 +105,29 @@
   .channel-logo {
     @apply w-12 h-12 flex-shrink-0 object-contain bg-white/30 rounded flex items-center justify-center overflow-hidden border border-border/30;
   }
+  
+  /* Fixed player and navigation layout */
+  .fixed-player-area {
+    @apply fixed top-16 left-0 right-0 z-20;
+    background-color: #000;
+  }
+  
+  .player-spacer {
+    @apply pt-[calc(56.25vw*0.6+90px)] md:pt-[calc(56.25vw*0.6*0.8+90px)] lg:pt-[calc(56.25vw*0.6*0.7+90px)] xl:pt-[calc(56.25vw*0.6*0.6+90px)];
+  }
+  
+  .fixed-nav-area {
+    @apply fixed left-0 right-0 z-20;
+    top: calc(16rem + 90px);
+  }
+  
+  .nav-spacer {
+    @apply pt-12;
+  }
+  
+  .channel-list-container {
+    @apply pt-4;
+  }
 }
 
 @layer utilities {

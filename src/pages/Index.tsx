@@ -116,9 +116,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header fixo */}
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border py-3">
+      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border py-3">
         <div className="tv-container">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -140,44 +140,58 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Video player section */}
-      <div className="w-full">
-        {activeChannel ? (
-          <div className="w-full">
-            <VideoPlayer 
-              channel={activeChannel} 
-              onPrevChannel={handlePrevChannel}
-              onNextChannel={handleNextChannel}
-            />
-            <div className="bg-card p-3 border-b border-border">
-              <h2 className="font-semibold text-lg">{activeChannel.name}</h2>
-              <p className="text-sm text-muted-foreground">{activeChannel.description}</p>
+      <div className="flex flex-col">
+        {/* Fixed video player area */}
+        <div className="fixed-player-area w-full bg-black">
+          <div className="tv-container py-3">
+            <div className="max-w-4xl mx-auto">
+              {activeChannel ? (
+                <div className="w-full">
+                  <VideoPlayer 
+                    channel={activeChannel} 
+                    onPrevChannel={handlePrevChannel}
+                    onNextChannel={handleNextChannel}
+                  />
+                  <div className="bg-card p-3 border-b border-border">
+                    <h2 className="font-semibold text-lg">{activeChannel.name}</h2>
+                    <p className="text-sm text-muted-foreground">{activeChannel.description}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
+                  <p className="text-muted-foreground">Nenhum canal selecionado</p>
+                </div>
+              )}
             </div>
           </div>
-        ) : (
-          <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
-            <p className="text-muted-foreground">Nenhum canal selecionado</p>
-          </div>
-        )}
-      </div>
+        </div>
 
-      {/* Navigation fixed below the player */}
-      <Navigation
-        activeCategory={activeCategory}
-        onSelectCategory={handleSelectCategory}
-        isFixed={true}
-      />
+        {/* Space to push content below fixed player */}
+        <div className="player-spacer"></div>
 
-      {/* Channel grid section */}
-      <div className="flex-grow overflow-y-auto">
-        <div className="tv-container py-4">
-          <ChannelGrid
-            channels={channels}
+        {/* Fixed navigation below the player */}
+        <div className="fixed-nav-area w-full">
+          <Navigation
             activeCategory={activeCategory}
-            onSelectChannel={handleSelectChannel}
-            onToggleFavorite={handleToggleFavorite}
-            displayAsList={true}
+            onSelectCategory={handleSelectCategory}
+            isFixed={true}
           />
+        </div>
+
+        {/* Space to push content below fixed navigation */}
+        <div className="nav-spacer"></div>
+
+        {/* Scrollable channel grid section */}
+        <div className="flex-grow overflow-y-auto pt-4 channel-list-container">
+          <div className="tv-container pb-20">
+            <ChannelGrid
+              channels={channels}
+              activeCategory={activeCategory}
+              onSelectChannel={handleSelectChannel}
+              onToggleFavorite={handleToggleFavorite}
+              displayAsList={true}
+            />
+          </div>
         </div>
       </div>
 
