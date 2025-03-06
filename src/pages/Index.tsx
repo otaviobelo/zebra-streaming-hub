@@ -98,6 +98,23 @@ const Index = () => {
     }
   };
 
+  // Handle navigation between channels
+  const handlePrevChannel = () => {
+    if (!activeChannel || channels.length <= 1) return;
+    
+    const currentIndex = channels.findIndex(ch => ch.id === activeChannel.id);
+    const prevIndex = currentIndex <= 0 ? channels.length - 1 : currentIndex - 1;
+    handleSelectChannel(channels[prevIndex]);
+  };
+
+  const handleNextChannel = () => {
+    if (!activeChannel || channels.length <= 1) return;
+    
+    const currentIndex = channels.findIndex(ch => ch.id === activeChannel.id);
+    const nextIndex = currentIndex >= channels.length - 1 ? 0 : currentIndex + 1;
+    handleSelectChannel(channels[nextIndex]);
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header fixo */}
@@ -123,50 +140,44 @@ const Index = () => {
         </div>
       </header>
 
-      {/* Layout estilo Pluto TV: player fixo no topo e menu de navegação abaixo */}
-      <div className="flex flex-col w-full">
-        {/* Player de vídeo fixo no topo */}
-        <div className="sticky top-[61px] z-10 w-full bg-black">
-          {activeChannel ? (
-            <div className="w-full">
-              <VideoPlayer channel={activeChannel} />
-              <div className="bg-card p-3 border-b border-border">
-                <h2 className="font-semibold text-lg">{activeChannel.name}</h2>
-                <p className="text-sm text-muted-foreground">{activeChannel.description}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
-              <p className="text-muted-foreground">Nenhum canal selecionado</p>
-            </div>
-          )}
-        </div>
-
-        {/* Conteúdo rolável abaixo do player - Nova organização com menu à esquerda */}
-        <div className="w-full flex-grow overflow-y-auto">
-          <div className="tv-container py-4">
-            <div className="flex flex-col md:flex-row">
-              {/* Navigation - agora à esquerda e fixada */}
-              <section className="md:w-64 flex-shrink-0 mb-6 md:mb-0 md:mr-6">
-                <Navigation
-                  activeCategory={activeCategory}
-                  onSelectCategory={handleSelectCategory}
-                  isVertical={true}
-                />
-              </section>
-
-              {/* Channel grid - canais em lista vertical */}
-              <section className="flex-grow mb-10">
-                <ChannelGrid
-                  channels={channels}
-                  activeCategory={activeCategory}
-                  onSelectChannel={handleSelectChannel}
-                  onToggleFavorite={handleToggleFavorite}
-                  displayAsList={true}
-                />
-              </section>
+      {/* Video player section */}
+      <div className="w-full">
+        {activeChannel ? (
+          <div className="w-full">
+            <VideoPlayer 
+              channel={activeChannel} 
+              onPrevChannel={handlePrevChannel}
+              onNextChannel={handleNextChannel}
+            />
+            <div className="bg-card p-3 border-b border-border">
+              <h2 className="font-semibold text-lg">{activeChannel.name}</h2>
+              <p className="text-sm text-muted-foreground">{activeChannel.description}</p>
             </div>
           </div>
+        ) : (
+          <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
+            <p className="text-muted-foreground">Nenhum canal selecionado</p>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation fixed below the player */}
+      <Navigation
+        activeCategory={activeCategory}
+        onSelectCategory={handleSelectCategory}
+        isFixed={true}
+      />
+
+      {/* Channel grid section */}
+      <div className="flex-grow overflow-y-auto">
+        <div className="tv-container py-4">
+          <ChannelGrid
+            channels={channels}
+            activeCategory={activeCategory}
+            onSelectChannel={handleSelectChannel}
+            onToggleFavorite={handleToggleFavorite}
+            displayAsList={true}
+          />
         </div>
       </div>
 

@@ -1,14 +1,15 @@
-
 import React, { useEffect, useRef, useState } from 'react';
 import Hls from 'hls.js';
 import { Channel } from '@/lib/types';
-import { Play, Pause, Volume2, VolumeX, Maximize, Minimize } from 'lucide-react';
+import { Play, Pause, Volume2, VolumeX, Maximize, Minimize, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface VideoPlayerProps {
   channel: Channel;
+  onPrevChannel?: () => void;
+  onNextChannel?: () => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel, onPrevChannel, onNextChannel }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -18,7 +19,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
   const [error, setError] = useState<string | null>(null);
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check fullscreen change
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -43,7 +43,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
         hls.attachMedia(videoElement);
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           if (isPlaying) videoElement.play().catch(() => {
-            // Handle autoplay restrictions by muting and trying again
             videoElement.muted = true;
             setIsMuted(true);
             videoElement.play().catch(err => {
@@ -59,11 +58,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
             console.error('HLS error:', data);
             setError('Erro ao carregar a transmissão. Clique para tentar novamente.');
             hls?.destroy();
-            setTimeout(() => loadVideo(), 3000); // Auto retry
+            setTimeout(() => loadVideo(), 3000);
           }
         });
       } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
-        // Native HLS support (Safari)
         videoElement.src = channel.streamUrl;
         videoElement.addEventListener('loadedmetadata', () => {
           if (isPlaying) videoElement.play().catch(err => {
@@ -92,7 +90,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
 
     if (error) {
       setError(null);
-      // Reload video
       video.load();
       setIsPlaying(true);
       return;
@@ -125,17 +122,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
     if (!document.fullscreenElement) {
       containerRef.current.requestFullscreen().then(() => {
         setIsFullscreen(true);
-        // Fix for Safari: trigger a reflow
-        setTimeout(() => {
-          if (containerRef.current) {
-            const videoElem = containerRef.current.querySelector('video');
-            if (videoElem) {
-              videoElem.style.width = '100%';
-              videoElem.style.height = '100%';
-              videoElem.style.objectFit = 'contain';
-            }
-          }
-        }, 100);
       }).catch(err => {
         console.error('Error attempting to enable fullscreen:', err);
       });
@@ -169,15 +155,41 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ channel }) => {
     <div 
       ref={containerRef}
       className={`relative w-full bg-black overflow-hidden group ${
-        isFullscreen ? 'fixed inset-0 z-50 flex items-center justify-center' : ''
+        isFullscreen ? 'fixed inset-0 z-50' : ''
       }`}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      <div className={`mx-auto max-w-5xl ${isFullscreen ? 'w-full h-full' : 'aspect-video'} flex items-center justify-center`}>
+      {onPrevChannel && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onPrevChannel();
+          }}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-primary/90 text-white p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-primary"
+          aria-label="Canal anterior"
+        >
+          <ChevronLeft size={24} />
+        </button>
+      )}
+      
+      {onNextChannel && (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onNextChannel();
+          }}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-10 bg-primary/90 text-white p-3 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-primary"
+          aria-label="Próximo canal"
+        >
+          <ChevronRight size={24} />
+        </button>
+      )}
+      
+      <div className={`w-full mx-auto ${isFullscreen ? 'h-full' : 'aspect-video'}`}>
         <video
           ref={videoRef}
-          className={`max-w-full h-full object-contain ${isFullscreen ? 'w-full h-full' : ''}`}
+          className={`w-full h-full object-contain mx-auto ${isFullscreen ? 'max-h-screen' : ''}`}
           autoPlay
           playsInline
           onClick={togglePlay}

@@ -6,13 +6,13 @@ import { Star, Menu, X } from 'lucide-react';
 interface NavigationProps {
   activeCategory: string;
   onSelectCategory: (categoryId: string) => void;
-  isVertical?: boolean;
+  isFixed?: boolean;
 }
 
 const Navigation: React.FC<NavigationProps> = ({ 
   activeCategory, 
-  onSelectCategory, 
-  isVertical = false 
+  onSelectCategory,
+  isFixed = false
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -29,38 +29,35 @@ const Navigation: React.FC<NavigationProps> = ({
 
       {/* Navigation menu */}
       <div className={`
-        ${isVertical ? 'md:sticky md:top-[161px] md:h-[calc(100vh-161px)] md:flex md:flex-col md:space-y-1' : ''}
+        ${isFixed ? 'sticky top-[61px] z-10 bg-background/95 backdrop-blur-md border-b border-border py-2' : ''}
         ${mobileMenuOpen ? 'fixed inset-0 z-20 bg-background/95 pt-20 px-4' : 'hidden md:block'}
+        w-full
       `}>
-        <div className={`
-          ${isVertical ? 'flex flex-col space-y-1' : 'flex items-center space-x-1 min-w-max'}
-        `}>
-          {categories.map(category => (
+        <div className="tv-container">
+          <div className="flex items-center space-x-1 overflow-x-auto pb-2 md:pb-0 scrollbar-thin">
+            {categories.map(category => (
+              <button
+                key={category.id}
+                onClick={() => {
+                  onSelectCategory(category.id);
+                  if (mobileMenuOpen) setMobileMenuOpen(false);
+                }}
+                className={`menu-item whitespace-nowrap ${activeCategory === category.id ? 'active' : ''}`}
+              >
+                {category.name}
+              </button>
+            ))}
             <button
-              key={category.id}
               onClick={() => {
-                onSelectCategory(category.id);
+                onSelectCategory('favorites');
                 if (mobileMenuOpen) setMobileMenuOpen(false);
               }}
-              className={`menu-item ${activeCategory === category.id ? 'active' : ''} ${
-                isVertical ? 'justify-start' : ''
-              }`}
+              className={`menu-item whitespace-nowrap ${activeCategory === 'favorites' ? 'active' : ''}`}
             >
-              {category.name}
+              <Star size={16} className="mr-1" />
+              Favoritos
             </button>
-          ))}
-          <button
-            onClick={() => {
-              onSelectCategory('favorites');
-              if (mobileMenuOpen) setMobileMenuOpen(false);
-            }}
-            className={`menu-item ${activeCategory === 'favorites' ? 'active' : ''} ${
-              isVertical ? 'justify-start' : ''
-            }`}
-          >
-            <Star size={16} className="mr-1" />
-            Favoritos
-          </button>
+          </div>
         </div>
       </div>
     </>

@@ -1,16 +1,32 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tv, PlusCircle, LogOut } from 'lucide-react';
-import { adminCredentials, addChannel, getChannelsWithFavorites } from '@/utils/channelData';
+import { Tv, PlusCircle, LogOut, Pencil, Trash2 } from 'lucide-react';
+import { adminCredentials, addChannel, getChannelsWithFavorites, saveChannels } from '@/utils/channelData';
 import { AdminCredentials, Channel } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState<AdminCredentials>({ username: '', password: '' });
   const [channels, setChannels] = useState<Channel[]>([]);
-  const [newChannel, setNewChannel] = useState({
+  const [editMode, setEditMode] = useState(false);
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [formTitle, setFormTitle] = useState('Adicionar Canal');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [channelToDelete, setChannelToDelete] = useState<Channel | null>(null);
+  
+  const [formData, setFormData] = useState({
     name: '',
     streamUrl: '',
     thumbnailUrl: '',
@@ -18,6 +34,7 @@ const Admin = () => {
     category: 'entertainment',
     description: ''
   });
+  
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -53,26 +70,8 @@ const Admin = () => {
     setLoginForm({ username: '', password: '' });
   };
 
-  const handleAddChannel = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!newChannel.name || !newChannel.streamUrl || !newChannel.category) {
-      toast({
-        title: "Erro ao adicionar canal",
-        description: "Nome, URL de transmissão e categoria são obrigatórios",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-
-    // Add channel
-    const updatedChannels = addChannel(newChannel);
-    setChannels(updatedChannels);
-    
-    // Reset form
-    setNewChannel({
+  const resetForm = () => {
+    setFormData({
       name: '',
       streamUrl: '',
       thumbnailUrl: '',
@@ -80,16 +79,112 @@ const Admin = () => {
       category: 'entertainment',
       description: ''
     });
+    setEditMode(false);
+    setSelectedChannelId(null);
+    setFormTitle('Adicionar Canal');
+  };
+
+  const handleEditChannel = (channel: Channel) => {
+    setFormData({
+      name: channel.name,
+      streamUrl: channel.streamUrl,
+      thumbnailUrl: channel.thumbnailUrl || '',
+      logoUrl: channel.logoUrl || '',
+      category: channel.category,
+      description: channel.description
+    });
+    setSelectedChannelId(channel.id);
+    setEditMode(true);
+    setFormTitle('Editar Canal');
+  };
+
+  const handleDeleteChannel = (channel: Channel) => {
+    setChannelToDelete(channel);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteChannel = () => {
+    if (!channelToDelete) return;
+    
+    const updatedChannels = channels.filter(ch => ch.id !== channelToDelete.id);
+    saveChannels(updatedChannels);
+    setChannels(updatedChannels);
     
     toast({
-      title: "Canal adicionado",
-      description: `${newChannel.name} foi adicionado com sucesso`,
+      title: "Canal excluído",
+      description: `${channelToDelete.name} foi excluído com sucesso`,
       duration: 3000,
     });
+    
+    setShowDeleteDialog(false);
+    setChannelToDelete(null);
+  };
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!formData.name || !formData.streamUrl || !formData.category) {
+      toast({
+        title: "Erro ao processar canal",
+        description: "Nome, URL de transmissão e categoria são obrigatórios",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    if (editMode && selectedChannelId) {
+      // Update existing channel
+      const updatedChannels = channels.map(ch => 
+        ch.id === selectedChannelId 
+          ? { 
+              ...ch, 
+              name: formData.name,
+              streamUrl: formData.streamUrl,
+              thumbnailUrl: formData.thumbnailUrl,
+              logoUrl: formData.logoUrl,
+              category: formData.category,
+              description: formData.description
+            } 
+          : ch
+      );
+      
+      saveChannels(updatedChannels);
+      setChannels(updatedChannels);
+      
+      toast({
+        title: "Canal atualizado",
+        description: `${formData.name} foi atualizado com sucesso`,
+        duration: 3000,
+      });
+    } else {
+      // Add new channel
+      const newChannel = {
+        name: formData.name,
+        streamUrl: formData.streamUrl,
+        thumbnailUrl: formData.thumbnailUrl,
+        logoUrl: formData.logoUrl,
+        category: formData.category,
+        description: formData.description
+      };
+      
+      const updatedChannels = addChannel(newChannel);
+      setChannels(updatedChannels);
+      
+      toast({
+        title: "Canal adicionado",
+        description: `${formData.name} foi adicionado com sucesso`,
+        duration: 3000,
+      });
+    }
+    
+    // Reset form
+    resetForm();
   };
 
   // Check if we've reached the channel limit
-  const channelLimitReached = channels.length >= 1000;
+  const channelLimitReached = channels.length >= 1000 && !editMode;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -172,12 +267,16 @@ const Admin = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Add new channel form */}
+              {/* Add/Edit channel form */}
               <div className="md:col-span-1">
                 <div className="bg-card p-6 rounded-lg border border-border shadow-sm sticky top-24">
                   <div className="flex items-center space-x-2 mb-4">
-                    <PlusCircle size={20} className="text-primary" />
-                    <h2 className="text-lg font-semibold">Adicionar Canal</h2>
+                    {editMode ? (
+                      <Pencil size={20} className="text-primary" />
+                    ) : (
+                      <PlusCircle size={20} className="text-primary" />
+                    )}
+                    <h2 className="text-lg font-semibold">{formTitle}</h2>
                   </div>
                   
                   {channelLimitReached ? (
@@ -185,7 +284,7 @@ const Admin = () => {
                       Limite de 1000 canais atingido
                     </div>
                   ) : (
-                    <form onSubmit={handleAddChannel} className="space-y-4">
+                    <form onSubmit={handleFormSubmit} className="space-y-4">
                       <div>
                         <label htmlFor="name" className="block text-sm font-medium mb-1">
                           Nome do Canal *
@@ -193,8 +292,8 @@ const Admin = () => {
                         <input
                           id="name"
                           type="text"
-                          value={newChannel.name}
-                          onChange={(e) => setNewChannel(prev => ({ ...prev, name: e.target.value }))}
+                          value={formData.name}
+                          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                           className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                           required
                         />
@@ -207,8 +306,8 @@ const Admin = () => {
                         <input
                           id="streamUrl"
                           type="url"
-                          value={newChannel.streamUrl}
-                          onChange={(e) => setNewChannel(prev => ({ ...prev, streamUrl: e.target.value }))}
+                          value={formData.streamUrl}
+                          onChange={(e) => setFormData(prev => ({ ...prev, streamUrl: e.target.value }))}
                           className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                           placeholder="https://..."
                           required
@@ -222,8 +321,8 @@ const Admin = () => {
                         <input
                           id="thumbnailUrl"
                           type="url"
-                          value={newChannel.thumbnailUrl}
-                          onChange={(e) => setNewChannel(prev => ({ ...prev, thumbnailUrl: e.target.value }))}
+                          value={formData.thumbnailUrl}
+                          onChange={(e) => setFormData(prev => ({ ...prev, thumbnailUrl: e.target.value }))}
                           className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                           placeholder="https://..."
                         />
@@ -236,8 +335,8 @@ const Admin = () => {
                         <input
                           id="logoUrl"
                           type="url"
-                          value={newChannel.logoUrl}
-                          onChange={(e) => setNewChannel(prev => ({ ...prev, logoUrl: e.target.value }))}
+                          value={formData.logoUrl}
+                          onChange={(e) => setFormData(prev => ({ ...prev, logoUrl: e.target.value }))}
                           className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                           placeholder="https://..."
                         />
@@ -249,8 +348,8 @@ const Admin = () => {
                         </label>
                         <select
                           id="category"
-                          value={newChannel.category}
-                          onChange={(e) => setNewChannel(prev => ({ ...prev, category: e.target.value }))}
+                          value={formData.category}
+                          onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                           className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50"
                           required
                         >
@@ -269,18 +368,30 @@ const Admin = () => {
                         </label>
                         <textarea
                           id="description"
-                          value={newChannel.description}
-                          onChange={(e) => setNewChannel(prev => ({ ...prev, description: e.target.value }))}
+                          value={formData.description}
+                          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                           className="w-full p-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/50 min-h-[80px]"
                         />
                       </div>
                       
-                      <button
-                        type="submit"
-                        className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition-colors"
-                      >
-                        Adicionar Canal
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="submit"
+                          className="flex-1 bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition-colors"
+                        >
+                          {editMode ? 'Atualizar Canal' : 'Adicionar Canal'}
+                        </button>
+                        
+                        {editMode && (
+                          <button
+                            type="button"
+                            onClick={resetForm}
+                            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/90 transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        )}
+                      </div>
                     </form>
                   )}
                 </div>
@@ -293,32 +404,50 @@ const Admin = () => {
                 <div className="space-y-4">
                   {channels.map(channel => (
                     <div key={channel.id} className="bg-card p-4 rounded-lg border border-border hover:border-primary/50 transition-colors">
-                      <div className="flex items-center">
-                        <div className="w-12 h-12 mr-4 relative flex-shrink-0 bg-white/30 rounded flex items-center justify-center overflow-hidden">
-                          <img 
-                            src={channel.logoUrl || channel.thumbnailUrl} 
-                            alt={channel.name}
-                            className="max-w-full max-h-full object-contain"
-                            loading="lazy"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = `https://placehold.co/120x120/beige/333333?text=${encodeURIComponent(channel.name[0])}`;
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <h3 className="font-medium">{channel.name}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1">{channel.description}</p>
-                          <div className="mt-1 flex items-center">
-                            <span className="inline-block px-2 py-0.5 text-xs rounded bg-secondary text-secondary-foreground">
-                              {channel.category}
-                            </span>
-                            {channel.isFavorite && (
-                              <span className="ml-2 inline-block px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800">
-                                Favorito
-                              </span>
-                            )}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-12 h-12 mr-4 relative flex-shrink-0 bg-white/30 rounded flex items-center justify-center overflow-hidden">
+                            <img 
+                              src={channel.logoUrl || channel.thumbnailUrl} 
+                              alt={channel.name}
+                              className="max-w-full max-h-full object-contain"
+                              loading="lazy"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.src = `https://placehold.co/120x120/beige/333333?text=${encodeURIComponent(channel.name[0])}`;
+                              }}
+                            />
                           </div>
+                          <div>
+                            <h3 className="font-medium">{channel.name}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-1">{channel.description}</p>
+                            <div className="mt-1 flex items-center">
+                              <span className="inline-block px-2 py-0.5 text-xs rounded bg-secondary text-secondary-foreground">
+                                {channel.category}
+                              </span>
+                              {channel.isFavorite && (
+                                <span className="ml-2 inline-block px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800">
+                                  Favorito
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditChannel(channel)}
+                            className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                            aria-label="Editar canal"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteChannel(channel)}
+                            className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                            aria-label="Excluir canal"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -329,6 +458,28 @@ const Admin = () => {
           )}
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o canal "{channelToDelete?.name}"?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteChannel}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Footer */}
       <footer className="py-6 border-t border-border mt-auto">

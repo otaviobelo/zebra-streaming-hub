@@ -36,7 +36,7 @@ export const saveChannels = (channels: Channel[]): void => {
   }
 };
 
-// Default channels
+// Default channels with correct logoUrl
 const defaultChannels: Channel[] = [
   {
     id: '1',
@@ -189,4 +189,47 @@ export const filterChannelsByCategory = (categoryId: string): Channel[] => {
   if (categoryId === 'favorites') return channelsWithFavorites.filter(channel => channel.isFavorite);
   
   return channelsWithFavorites.filter(channel => channel.category === categoryId);
+};
+
+// Delete a channel
+export const deleteChannel = (channelId: string): Channel[] => {
+  try {
+    const channels = getChannelsWithFavorites();
+    const updatedChannels = channels.filter(channel => channel.id !== channelId);
+    saveChannels(updatedChannels);
+    return updatedChannels;
+  } catch (error) {
+    console.error('Error deleting channel:', error);
+    return getChannelsWithFavorites();
+  }
+};
+
+// Update an existing channel
+export const updateChannel = (
+  channelId: string, 
+  channelData: Omit<Channel, "id" | "isFavorite">
+): Channel[] => {
+  try {
+    const channels = getChannelsWithFavorites();
+    const channelIndex = channels.findIndex(ch => ch.id === channelId);
+    
+    if (channelIndex === -1) {
+      console.error('Channel not found:', channelId);
+      return channels;
+    }
+    
+    const updatedChannel = {
+      ...channels[channelIndex],
+      ...channelData
+    };
+    
+    const updatedChannels = [...channels];
+    updatedChannels[channelIndex] = updatedChannel;
+    
+    saveChannels(updatedChannels);
+    return updatedChannels;
+  } catch (error) {
+    console.error('Error updating channel:', error);
+    return getChannelsWithFavorites();
+  }
 };

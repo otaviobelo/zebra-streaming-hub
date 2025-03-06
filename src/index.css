@@ -71,7 +71,7 @@
   }
 
   .menu-item {
-    @apply flex items-center px-3 py-2 text-sm rounded-md transition-colors hover:bg-secondary;
+    @apply flex items-center px-3 py-2 text-sm rounded-md transition-colors hover:bg-beige-300;
   }
 
   .menu-item.active {
@@ -83,11 +83,7 @@
   }
 
   .channel-list-item {
-    @apply relative p-3 rounded-lg bg-card border border-border/60 transition-all duration-300 hover:border-primary/50 hover:bg-card/80 hover:shadow-md;
-  }
-
-  .channel-list-item:hover {
-    @apply bg-beige-100;
+    @apply relative p-3 rounded-lg bg-card border border-border/60 transition-all duration-300 hover:border-primary/50 hover:bg-beige-200 hover:shadow-md;
   }
 
   .channel-card:hover .channel-info {
@@ -105,6 +101,10 @@
   .player-controls {
     @apply absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent transition-opacity duration-300 opacity-0 group-hover:opacity-100;
   }
+  
+  .channel-logo {
+    @apply w-12 h-12 flex-shrink-0 object-contain bg-white/30 rounded flex items-center justify-center overflow-hidden border border-border/30;
+  }
 }
 
 @layer utilities {
@@ -114,6 +114,18 @@
   
   .no-tap-highlight {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    @apply h-1.5;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
   }
 }
 
@@ -132,4 +144,3 @@
   padding: 0;
   text-align: left;
 }
-
