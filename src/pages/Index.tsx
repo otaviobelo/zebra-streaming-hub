@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tv } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -23,7 +22,6 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Initialize with channels
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
@@ -49,7 +47,6 @@ const Index = () => {
     fetchInitialData();
   }, [toast]);
 
-  // Handle channel selection
   const handleSelectChannel = (channel: Channel) => {
     setActiveChannel(channel);
     
@@ -60,7 +57,6 @@ const Index = () => {
     });
   };
 
-  // Handle category selection
   const handleSelectCategory = async (categoryId: string) => {
     setActiveCategory(categoryId);
     setIsLoading(true);
@@ -81,7 +77,6 @@ const Index = () => {
     }
   };
 
-  // Handle search
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
     setIsLoading(true);
@@ -101,12 +96,10 @@ const Index = () => {
     }
   };
 
-  // Handle toggle favorite
   const handleToggleFavorite = async (channelId: string) => {
     try {
       await toggleFavoriteChannel(channelId);
       
-      // Update channels with new favorite status
       setChannels(prev => 
         prev.map(ch => 
           ch.id === channelId 
@@ -115,14 +108,12 @@ const Index = () => {
         )
       );
       
-      // Update active channel if it's the same
       if (activeChannel && activeChannel.id === channelId) {
         setActiveChannel(prev => 
           prev ? { ...prev, isFavorite: !prev.isFavorite } : null
         );
       }
       
-      // Show toast
       const channel = channels.find(ch => ch.id === channelId);
       if (channel) {
         const isFavorite = !channel.isFavorite;
@@ -137,7 +128,6 @@ const Index = () => {
     }
   };
 
-  // Handle navigation between channels
   const handlePrevChannel = () => {
     if (!activeChannel || channels.length <= 1) return;
     
@@ -156,7 +146,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Header fixo */}
       <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border py-3">
         <div className="tv-container">
           <div className="flex items-center justify-between">
@@ -180,7 +169,6 @@ const Index = () => {
       </header>
 
       <div className="flex flex-col">
-        {/* Fixed navigation above the player */}
         <div className="fixed-nav-area w-full">
           <Navigation
             activeCategory={activeCategory}
@@ -189,13 +177,11 @@ const Index = () => {
           />
         </div>
 
-        {/* Space to push content below fixed navigation */}
         <div className="nav-spacer"></div>
 
-        {/* Fixed video player area */}
         <div className="fixed-player-area w-full bg-black">
-          <div className="tv-container py-3">
-            <div className="max-w-4xl mx-auto">
+          <div className="tv-container py-2">
+            <div className="max-w-4xl mx-auto" style={{ width: "90%" }}>
               {activeChannel ? (
                 <div className="w-full">
                   <VideoPlayer 
@@ -203,12 +189,6 @@ const Index = () => {
                     onPrevChannel={handlePrevChannel}
                     onNextChannel={handleNextChannel}
                   />
-                  <div className="channel-description">
-                    <h2 className="font-semibold text-lg">
-                      {activeChannel.channelNumber}. {activeChannel.name}
-                    </h2>
-                    <p className="text-sm text-white/80">{activeChannel.description}</p>
-                  </div>
                 </div>
               ) : (
                 <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
@@ -221,10 +201,8 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Space to push content below fixed player */}
         <div className="player-spacer"></div>
 
-        {/* Scrollable channel grid section */}
         <div className="channel-list-container">
           <div className="tv-container">
             {isLoading ? (
@@ -244,7 +222,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="py-6 border-t border-border mt-auto">
         <div className="tv-container">
           <div className="text-center text-sm text-muted-foreground">
