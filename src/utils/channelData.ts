@@ -1,5 +1,6 @@
 
 import { Channel, Category, AdminCredentials } from '@/lib/types';
+import { syncService } from './syncService';
 
 // Add IndexedDB for persistent storage
 const DB_NAME = 'tvzebra-db';
@@ -214,6 +215,8 @@ export const saveChannels = async (channels: Channel[]): Promise<void> => {
     
     transaction.oncomplete = () => {
       console.log('Channels saved to IndexedDB successfully');
+      // Notificar que os canais foram atualizados
+      syncService.notifyChannelsUpdated();
     };
     
     transaction.onerror = (event) => {
@@ -289,6 +292,9 @@ export const toggleFavoriteChannel = async (channelId: string): Promise<string[]
     updatedFavorites.forEach(id => {
       store.add({ id });
     });
+    
+    // Notificar que as alterações de favoritos afetam os canais
+    syncService.notifyChannelsUpdated();
     
     return updatedFavorites;
   } catch (error) {
@@ -366,6 +372,7 @@ export const deleteChannel = async (channelId: string): Promise<Channel[]> => {
     const channels = await getChannelsWithFavorites();
     const updatedChannels = channels.filter(channel => channel.id !== channelId);
     await saveChannels(updatedChannels);
+    // Não precisamos notificar aqui porque saveChannels já fará isso
     return updatedChannels;
   } catch (error) {
     console.error('Error deleting channel:', error);
@@ -396,6 +403,7 @@ export const updateChannel = async (
     updatedChannels[channelIndex] = updatedChannel;
     
     await saveChannels(updatedChannels);
+    // Não precisamos notificar aqui porque saveChannels já fará isso
     return updatedChannels;
   } catch (error) {
     console.error('Error updating channel:', error);

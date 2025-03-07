@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tv, PlusCircle, LogOut, Pencil, Trash2 } from 'lucide-react';
 import { adminCredentials, addChannel, getChannelsWithFavorites, saveChannels, deleteChannel, updateChannel } from '@/utils/channelData';
+import { syncService } from '@/utils/syncService';
 import { AdminCredentials, Channel } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -58,6 +59,16 @@ const Admin = () => {
     };
     
     loadChannels();
+    
+    // Registrar para atualizações de canais
+    const unsubscribe = syncService.onChannelsUpdated(async () => {
+      // Recarregar canais quando houver mudanças
+      await loadChannels();
+    });
+    
+    return () => {
+      unsubscribe();
+    };
   }, [toast]);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -134,6 +145,9 @@ const Admin = () => {
         description: `${channelToDelete.name} foi excluído com sucesso`,
         duration: 3000,
       });
+      
+      // Notificar que os canais mudaram (isso já é feito em deleteChannel via saveChannels)
+      // O syncService notificará outras partes do aplicativo
     } catch (error) {
       console.error('Error deleting channel:', error);
       toast({
@@ -203,6 +217,9 @@ const Admin = () => {
           description: `${formData.name} foi adicionado com sucesso`,
           duration: 3000,
         });
+        
+        // Notificar que os canais mudaram (isso já é feito em addChannel via saveChannels)
+        // O syncService notificará outras partes do aplicativo
       }
     } catch (error) {
       console.error('Error processing channel:', error);

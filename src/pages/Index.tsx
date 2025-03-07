@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tv } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import VideoPlayer from '@/components/VideoPlayer';
@@ -12,6 +12,7 @@ import {
   filterChannelsByCategory, 
   toggleFavoriteChannel 
 } from '@/utils/channelData';
+import { syncService } from '@/utils/syncService';
 import { Channel } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,8 +22,39 @@ const Index = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(0);
   const { toast } = useToast();
 
+  // Função para carregar canais com base na categoria ativa
+  const loadChannelsByCategory = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      let filteredChannels;
+      if (searchQuery) {
+        filteredChannels = await searchChannels(searchQuery);
+      } else {
+        filteredChannels = await filterChannelsByCategory(activeCategory);
+      }
+      setChannels(filteredChannels);
+      
+      // Se não tivermos um canal ativo ou o canal ativo não existir mais, selecione o primeiro
+      if (filteredChannels.length > 0 && 
+          (!activeChannel || !filteredChannels.some(ch => ch.id === activeChannel.id))) {
+        setActiveChannel(filteredChannels[0]);
+      }
+    } catch (error) {
+      console.error('Error loading channels:', error);
+      toast({
+        title: "Erro ao carregar canais",
+        description: "Não foi possível atualizar a lista de canais",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [activeCategory, searchQuery, activeChannel, toast]);
+
+  // Efeito para carregar dados iniciais
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsLoading(true);
@@ -48,6 +80,39 @@ const Index = () => {
     fetchInitialData();
   }, [toast]);
 
+  // Efeito para atualizar canais quando houver mudanças
+  useEffect(() => {
+    // Registrar listener para atualizações de canais
+    const unsubscribe = syncService.onChannelsUpdated(() => {
+      // Atualizar o timestamp para forçar uma atualização
+      setLastUpdate(syncService.getLastChannelUpdateTime());
+      
+      // Carregar canais atualizados
+      loadChannelsByCategory();
+    });
+    
+    // Configurar intervalo de polling para verificar atualizações a cada 5 segundos
+    const pollingInterval = setInterval(() => {
+      // Verificar se há atualizações comparando o timestamp atual com o último conhecido
+      const currentUpdateTime = syncService.getLastChannelUpdateTime();
+      if (currentUpdateTime > lastUpdate) {
+        setLastUpdate(currentUpdateTime);
+        loadChannelsByCategory();
+      }
+    }, 5000);
+    
+    // Limpar recursos ao desmontar
+    return () => {
+      unsubscribe();
+      clearInterval(pollingInterval);
+    };
+  }, [lastUpdate, loadChannelsByCategory]);
+
+  // Efeito para recarregar quando a categoria ou busca mudar
+  useEffect(() => {
+    loadChannelsByCategory();
+  }, [activeCategory, searchQuery, loadChannelsByCategory]);
+
   const handleSelectChannel = (channel: Channel) => {
     setActiveChannel(channel);
     
@@ -60,41 +125,11 @@ const Index = () => {
 
   const handleSelectCategory = async (categoryId: string) => {
     setActiveCategory(categoryId);
-    setIsLoading(true);
-    
-    try {
-      if (searchQuery) {
-        setSearchQuery('');
-        const filteredChannels = await filterChannelsByCategory(categoryId);
-        setChannels(filteredChannels);
-      } else {
-        const filteredChannels = await filterChannelsByCategory(categoryId);
-        setChannels(filteredChannels);
-      }
-    } catch (error) {
-      console.error('Error filtering channels:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    setSearchQuery('');
   };
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
-    setIsLoading(true);
-    
-    try {
-      if (query.trim() === '') {
-        const filteredChannels = await filterChannelsByCategory(activeCategory);
-        setChannels(filteredChannels);
-      } else {
-        const searchResults = await searchChannels(query);
-        setChannels(searchResults);
-      }
-    } catch (error) {
-      console.error('Error searching channels:', error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   const handleToggleFavorite = async (channelId: string) => {
