@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -105,30 +106,28 @@
     @apply w-12 h-12 flex-shrink-0 object-contain bg-white/30 rounded flex items-center justify-center overflow-hidden border border-border/30;
   }
   
-  /* Fixed player and navigation layout */
-  .fixed-player-area {
-    @apply fixed left-0 right-0 z-20;
-    top: 104px;
+  /* Atualização das classes de layout */
+  .sticky-header {
+    @apply sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border;
+  }
+  
+  .sticky-nav {
+    @apply sticky top-[64px] z-20 bg-[#F0F0F1] backdrop-blur-md border-b border-border;
+  }
+  
+  .sticky-player {
+    @apply sticky top-[112px] z-10 bg-black;
     height: auto;
   }
   
-  .player-spacer {
-    @apply pt-[calc(56.25vw*0.32*0.9+80px)] md:pt-[calc(56.25vw*0.32*0.8*0.9+80px)] lg:pt-[calc(56.25vw*0.32*0.7*0.9+80px)] xl:pt-[calc(56.25vw*0.32*0.6*0.9+80px)];
-  }
-  
-  .fixed-nav-area {
-    @apply fixed left-0 right-0 z-20;
-    top: 64px;
-  }
-  
-  .nav-spacer {
-    @apply pt-12;
+  .player-wrapper {
+    @apply w-full max-w-4xl mx-auto py-2;
+    width: 90%;
   }
   
   .channel-list-container {
-    @apply py-3 pb-20 overflow-y-auto;
-    height: calc(100vh - 360px); 
-    padding-top: 12px;
+    @apply py-4 overflow-y-auto;
+    min-height: 300px;
   }
 }
 

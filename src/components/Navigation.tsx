@@ -29,7 +29,7 @@ const Navigation: React.FC<NavigationProps> = ({
 
       {/* Navigation menu */}
       <div className={`
-        nav-wrapper bg-[#F0F0F1] backdrop-blur-md border-b border-border py-2 w-full z-20
+        sticky-nav py-2 w-full
         ${mobileMenuOpen ? 'fixed inset-0 pt-20 px-4' : 'hidden md:block'}
       `}>
         <div className="tv-container">

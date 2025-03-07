@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tv } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -146,7 +147,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-border py-3">
+      {/* Header fixo */}
+      <header className="sticky-header py-3">
         <div className="tv-container">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -168,43 +170,36 @@ const Index = () => {
         </div>
       </header>
 
-      <div className="flex flex-col">
-        <div className="fixed-nav-area w-full">
-          <Navigation
-            activeCategory={activeCategory}
-            onSelectCategory={handleSelectCategory}
-            isFixed={true}
-          />
-        </div>
+      {/* Menu de navegação */}
+      <Navigation
+        activeCategory={activeCategory}
+        onSelectCategory={handleSelectCategory}
+        isFixed={true}
+      />
 
-        <div className="nav-spacer"></div>
-
-        <div className="fixed-player-area w-full bg-black">
-          <div className="tv-container py-2">
-            <div className="max-w-4xl mx-auto" style={{ width: "90%" }}>
-              {activeChannel ? (
-                <div className="w-full">
-                  <VideoPlayer 
-                    channel={activeChannel} 
-                    onPrevChannel={handlePrevChannel}
-                    onNextChannel={handleNextChannel}
-                  />
-                </div>
-              ) : (
-                <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
-                  <p className="text-muted-foreground">
-                    {isLoading ? 'Carregando...' : 'Nenhum canal selecionado'}
-                  </p>
-                </div>
-              )}
+      {/* Player de vídeo */}
+      <div className="sticky-player">
+        <div className="player-wrapper">
+          {activeChannel ? (
+            <VideoPlayer 
+              channel={activeChannel} 
+              onPrevChannel={handlePrevChannel}
+              onNextChannel={handleNextChannel}
+            />
+          ) : (
+            <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
+              <p className="text-muted-foreground">
+                {isLoading ? 'Carregando...' : 'Nenhum canal selecionado'}
+              </p>
             </div>
-          </div>
+          )}
         </div>
+      </div>
 
-        <div className="player-spacer"></div>
-
-        <div className="channel-list-container">
-          <div className="tv-container">
+      {/* Lista de canais */}
+      <div className="flex-grow">
+        <div className="tv-container">
+          <div className="channel-list-container">
             {isLoading ? (
               <div className="w-full py-16 text-center">
                 <p className="text-muted-foreground">Carregando canais...</p>
