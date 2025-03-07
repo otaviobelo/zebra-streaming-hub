@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tv, PlusCircle, LogOut, Pencil, Trash2 } from 'lucide-react';
-import { adminCredentials, addChannel, getChannelsWithFavorites, saveChannels } from '@/utils/channelData';
+import { adminCredentials, addChannel, getChannelsWithFavorites, saveChannels, deleteChannel, updateChannel } from '@/utils/channelData';
 import { AdminCredentials, Channel } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -20,6 +20,7 @@ const Admin = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loginForm, setLoginForm] = useState<AdminCredentials>({ username: '', password: '' });
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [formTitle, setFormTitle] = useState('Adicionar Canal');
@@ -39,8 +40,25 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    setChannels(getChannelsWithFavorites());
-  }, []);
+    const loadChannels = async () => {
+      setIsLoading(true);
+      try {
+        const loadedChannels = await getChannelsWithFavorites();
+        setChannels(loadedChannels);
+      } catch (error) {
+        console.error('Error loading channels:', error);
+        toast({
+          title: "Erro ao carregar canais",
+          description: "Não foi possível carregar a lista de canais",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadChannels();
+  }, [toast]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,24 +121,35 @@ const Admin = () => {
     setShowDeleteDialog(true);
   };
 
-  const confirmDeleteChannel = () => {
+  const confirmDeleteChannel = async () => {
     if (!channelToDelete) return;
     
-    const updatedChannels = channels.filter(ch => ch.id !== channelToDelete.id);
-    saveChannels(updatedChannels);
-    setChannels(updatedChannels);
-    
-    toast({
-      title: "Canal excluído",
-      description: `${channelToDelete.name} foi excluído com sucesso`,
-      duration: 3000,
-    });
-    
-    setShowDeleteDialog(false);
-    setChannelToDelete(null);
+    setIsLoading(true);
+    try {
+      const updatedChannels = await deleteChannel(channelToDelete.id);
+      setChannels(updatedChannels);
+      
+      toast({
+        title: "Canal excluído",
+        description: `${channelToDelete.name} foi excluído com sucesso`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Error deleting channel:', error);
+      toast({
+        title: "Erro ao excluir canal",
+        description: "Não foi possível excluir o canal",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+      setShowDeleteDialog(false);
+      setChannelToDelete(null);
+    }
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
@@ -134,53 +163,60 @@ const Admin = () => {
       return;
     }
 
-    if (editMode && selectedChannelId) {
-      // Update existing channel
-      const updatedChannels = channels.map(ch => 
-        ch.id === selectedChannelId 
-          ? { 
-              ...ch, 
-              name: formData.name,
-              streamUrl: formData.streamUrl,
-              thumbnailUrl: formData.thumbnailUrl,
-              logoUrl: formData.logoUrl,
-              category: formData.category,
-              description: formData.description
-            } 
-          : ch
-      );
-      
-      saveChannels(updatedChannels);
-      setChannels(updatedChannels);
-      
-      toast({
-        title: "Canal atualizado",
-        description: `${formData.name} foi atualizado com sucesso`,
-        duration: 3000,
-      });
-    } else {
-      // Add new channel
-      const newChannel = {
-        name: formData.name,
-        streamUrl: formData.streamUrl,
-        thumbnailUrl: formData.thumbnailUrl,
-        logoUrl: formData.logoUrl,
-        category: formData.category,
-        description: formData.description
-      };
-      
-      const updatedChannels = addChannel(newChannel);
-      setChannels(updatedChannels);
-      
-      toast({
-        title: "Canal adicionado",
-        description: `${formData.name} foi adicionado com sucesso`,
-        duration: 3000,
-      });
-    }
+    setIsLoading(true);
     
-    // Reset form
-    resetForm();
+    try {
+      if (editMode && selectedChannelId) {
+        // Update existing channel
+        const updatedChannels = await updateChannel(selectedChannelId, {
+          name: formData.name,
+          streamUrl: formData.streamUrl,
+          thumbnailUrl: formData.thumbnailUrl,
+          logoUrl: formData.logoUrl,
+          category: formData.category,
+          description: formData.description
+        });
+        
+        setChannels(updatedChannels);
+        
+        toast({
+          title: "Canal atualizado",
+          description: `${formData.name} foi atualizado com sucesso`,
+          duration: 3000,
+        });
+      } else {
+        // Add new channel
+        const newChannel = {
+          name: formData.name,
+          streamUrl: formData.streamUrl,
+          thumbnailUrl: formData.thumbnailUrl,
+          logoUrl: formData.logoUrl,
+          category: formData.category,
+          description: formData.description
+        };
+        
+        const updatedChannels = await addChannel(newChannel);
+        setChannels(updatedChannels);
+        
+        toast({
+          title: "Canal adicionado",
+          description: `${formData.name} foi adicionado com sucesso`,
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      console.error('Error processing channel:', error);
+      toast({
+        title: "Erro ao processar canal",
+        description: "Não foi possível adicionar ou atualizar o canal",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+      // Reset form
+      resetForm();
+    }
   };
 
   // Check if we've reached the channel limit
@@ -377,9 +413,10 @@ const Admin = () => {
                       <div className="flex gap-2">
                         <button
                           type="submit"
-                          className="flex-1 bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition-colors"
+                          disabled={isLoading}
+                          className="flex-1 bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition-colors disabled:opacity-70"
                         >
-                          {editMode ? 'Atualizar Canal' : 'Adicionar Canal'}
+                          {isLoading ? 'Processando...' : (editMode ? 'Atualizar Canal' : 'Adicionar Canal')}
                         </button>
                         
                         {editMode && (
@@ -401,58 +438,66 @@ const Admin = () => {
               <div className="md:col-span-2">
                 <h2 className="text-xl font-semibold mb-4">Canais ({channels.length}/1000)</h2>
                 
-                <div className="space-y-4">
-                  {channels.map(channel => (
-                    <div key={channel.id} className="bg-card p-4 rounded-lg border border-border hover:border-primary/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className="w-12 h-12 mr-4 relative flex-shrink-0 bg-white/30 rounded flex items-center justify-center overflow-hidden">
-                            <img 
-                              src={channel.logoUrl || channel.thumbnailUrl} 
-                              alt={channel.name}
-                              className="max-w-full max-h-full object-contain"
-                              loading="lazy"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = `https://placehold.co/120x120/beige/333333?text=${encodeURIComponent(channel.name[0])}`;
-                              }}
-                            />
-                          </div>
-                          <div>
-                            <h3 className="font-medium">{channel.name}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-1">{channel.description}</p>
-                            <div className="mt-1 flex items-center">
-                              <span className="inline-block px-2 py-0.5 text-xs rounded bg-secondary text-secondary-foreground">
-                                {channel.category}
-                              </span>
-                              {channel.isFavorite && (
-                                <span className="ml-2 inline-block px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800">
-                                  Favorito
+                {isLoading && channels.length === 0 ? (
+                  <div className="bg-card p-6 rounded-lg text-center">
+                    Carregando canais...
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {channels.map(channel => (
+                      <div key={channel.id} className="bg-card p-4 rounded-lg border border-border hover:border-primary/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-12 h-12 mr-4 relative flex-shrink-0 bg-white/30 rounded flex items-center justify-center overflow-hidden">
+                              <img 
+                                src={channel.logoUrl || channel.thumbnailUrl} 
+                                alt={channel.name}
+                                className="max-w-full max-h-full object-contain"
+                                loading="lazy"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = `https://placehold.co/120x120/beige/333333?text=${encodeURIComponent(channel.name[0])}`;
+                                }}
+                              />
+                            </div>
+                            <div>
+                              <h3 className="font-medium">
+                                {channel.channelNumber}. {channel.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground line-clamp-1">{channel.description}</p>
+                              <div className="mt-1 flex items-center">
+                                <span className="inline-block px-2 py-0.5 text-xs rounded bg-secondary text-secondary-foreground">
+                                  {channel.category}
                                 </span>
-                              )}
+                                {channel.isFavorite && (
+                                  <span className="ml-2 inline-block px-2 py-0.5 text-xs rounded bg-yellow-100 text-yellow-800">
+                                    Favorito
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditChannel(channel)}
-                            className="p-2 text-muted-foreground hover:text-primary transition-colors"
-                            aria-label="Editar canal"
-                          >
-                            <Pencil size={18} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteChannel(channel)}
-                            className="p-2 text-muted-foreground hover:text-destructive transition-colors"
-                            aria-label="Excluir canal"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEditChannel(channel)}
+                              className="p-2 text-muted-foreground hover:text-primary transition-colors"
+                              aria-label="Editar canal"
+                            >
+                              <Pencil size={18} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteChannel(channel)}
+                              className="p-2 text-muted-foreground hover:text-destructive transition-colors"
+                              aria-label="Excluir canal"
+                            >
+                              <Trash2 size={18} />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -1,16 +1,16 @@
-
 export interface Channel {
   id: string;
   name: string;
   streamUrl: string;
-  thumbnailUrl: string;
+  thumbnailUrl?: string;
   logoUrl?: string;
   category: string;
   description: string;
   isFavorite?: boolean;
+  channelNumber?: number;
 }
 
-export type Category = {
+export interface Category {
   id: string;
   name: string;
 }

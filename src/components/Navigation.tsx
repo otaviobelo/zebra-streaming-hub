@@ -29,11 +29,11 @@ const Navigation: React.FC<NavigationProps> = ({
 
       {/* Navigation menu */}
       <div className={`
-        nav-wrapper bg-background/95 backdrop-blur-md border-b border-border py-2 w-full z-20
+        nav-wrapper bg-[#F6F6F7] backdrop-blur-md border-b border-border py-3 w-full z-20
         ${mobileMenuOpen ? 'fixed inset-0 pt-20 px-4' : 'hidden md:block'}
       `}>
         <div className="tv-container">
-          <div className="flex items-center space-x-1 overflow-x-auto pb-2 md:pb-0 scrollbar-thin">
+          <div className="flex items-center justify-center space-x-2 overflow-x-auto pb-2 md:pb-0 scrollbar-thin">
             {categories.map(category => (
               <button
                 key={category.id}

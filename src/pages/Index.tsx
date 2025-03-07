@@ -20,17 +20,34 @@ const Index = () => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   // Initialize with channels
   useEffect(() => {
-    const initialChannels = getChannelsWithFavorites();
-    setChannels(initialChannels);
+    const fetchInitialData = async () => {
+      setIsLoading(true);
+      try {
+        const initialChannels = await getChannelsWithFavorites();
+        setChannels(initialChannels);
+        
+        if (initialChannels.length > 0) {
+          setActiveChannel(initialChannels[0]);
+        }
+      } catch (error) {
+        console.error('Error loading channels:', error);
+        toast({
+          title: "Erro ao carregar canais",
+          description: "Não foi possível carregar a lista de canais",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    if (initialChannels.length > 0) {
-      setActiveChannel(initialChannels[0]);
-    }
-  }, []);
+    fetchInitialData();
+  }, [toast]);
 
   // Handle channel selection
   const handleSelectChannel = (channel: Channel) => {
@@ -38,63 +55,85 @@ const Index = () => {
     
     toast({
       title: "Canal alterado",
-      description: `Assistindo agora: ${channel.name}`,
+      description: `Assistindo agora: ${channel.name} (${channel.channelNumber})`,
       duration: 2000,
     });
   };
 
   // Handle category selection
-  const handleSelectCategory = (categoryId: string) => {
+  const handleSelectCategory = async (categoryId: string) => {
     setActiveCategory(categoryId);
+    setIsLoading(true);
     
-    if (searchQuery) {
-      setSearchQuery('');
-      setChannels(filterChannelsByCategory(categoryId));
-    } else {
-      setChannels(filterChannelsByCategory(categoryId));
+    try {
+      if (searchQuery) {
+        setSearchQuery('');
+        const filteredChannels = await filterChannelsByCategory(categoryId);
+        setChannels(filteredChannels);
+      } else {
+        const filteredChannels = await filterChannelsByCategory(categoryId);
+        setChannels(filteredChannels);
+      }
+    } catch (error) {
+      console.error('Error filtering channels:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle search
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
+    setIsLoading(true);
     
-    if (query.trim() === '') {
-      setChannels(filterChannelsByCategory(activeCategory));
-    } else {
-      setChannels(searchChannels(query));
+    try {
+      if (query.trim() === '') {
+        const filteredChannels = await filterChannelsByCategory(activeCategory);
+        setChannels(filteredChannels);
+      } else {
+        const searchResults = await searchChannels(query);
+        setChannels(searchResults);
+      }
+    } catch (error) {
+      console.error('Error searching channels:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Handle toggle favorite
-  const handleToggleFavorite = (channelId: string) => {
-    toggleFavoriteChannel(channelId);
-    
-    // Update channels with new favorite status
-    setChannels(prev => 
-      prev.map(ch => 
-        ch.id === channelId 
-          ? { ...ch, isFavorite: !ch.isFavorite } 
-          : ch
-      )
-    );
-    
-    // Update active channel if it's the same
-    if (activeChannel && activeChannel.id === channelId) {
-      setActiveChannel(prev => 
-        prev ? { ...prev, isFavorite: !prev.isFavorite } : null
+  const handleToggleFavorite = async (channelId: string) => {
+    try {
+      await toggleFavoriteChannel(channelId);
+      
+      // Update channels with new favorite status
+      setChannels(prev => 
+        prev.map(ch => 
+          ch.id === channelId 
+            ? { ...ch, isFavorite: !ch.isFavorite } 
+            : ch
+        )
       );
-    }
-    
-    // Show toast
-    const channel = channels.find(ch => ch.id === channelId);
-    if (channel) {
-      const isFavorite = !channel.isFavorite;
-      toast({
-        title: isFavorite ? "Adicionado aos favoritos" : "Removido dos favoritos",
-        description: `${channel.name} foi ${isFavorite ? 'adicionado aos' : 'removido dos'} favoritos`,
-        duration: 2000,
-      });
+      
+      // Update active channel if it's the same
+      if (activeChannel && activeChannel.id === channelId) {
+        setActiveChannel(prev => 
+          prev ? { ...prev, isFavorite: !prev.isFavorite } : null
+        );
+      }
+      
+      // Show toast
+      const channel = channels.find(ch => ch.id === channelId);
+      if (channel) {
+        const isFavorite = !channel.isFavorite;
+        toast({
+          title: isFavorite ? "Adicionado aos favoritos" : "Removido dos favoritos",
+          description: `${channel.name} foi ${isFavorite ? 'adicionado aos' : 'removido dos'} favoritos`,
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
     }
   };
 
@@ -165,13 +204,17 @@ const Index = () => {
                     onNextChannel={handleNextChannel}
                   />
                   <div className="channel-description">
-                    <h2 className="font-semibold text-lg">{activeChannel.name}</h2>
+                    <h2 className="font-semibold text-lg">
+                      {activeChannel.channelNumber}. {activeChannel.name}
+                    </h2>
                     <p className="text-sm text-white/80">{activeChannel.description}</p>
                   </div>
                 </div>
               ) : (
                 <div className="w-full aspect-video bg-muted/50 flex items-center justify-center">
-                  <p className="text-muted-foreground">Nenhum canal selecionado</p>
+                  <p className="text-muted-foreground">
+                    {isLoading ? 'Carregando...' : 'Nenhum canal selecionado'}
+                  </p>
                 </div>
               )}
             </div>
@@ -184,13 +227,19 @@ const Index = () => {
         {/* Scrollable channel grid section */}
         <div className="channel-list-container">
           <div className="tv-container">
-            <ChannelGrid
-              channels={channels}
-              activeCategory={activeCategory}
-              onSelectChannel={handleSelectChannel}
-              onToggleFavorite={handleToggleFavorite}
-              displayAsList={true}
-            />
+            {isLoading ? (
+              <div className="w-full py-16 text-center">
+                <p className="text-muted-foreground">Carregando canais...</p>
+              </div>
+            ) : (
+              <ChannelGrid
+                channels={channels}
+                activeCategory={activeCategory}
+                onSelectChannel={handleSelectChannel}
+                onToggleFavorite={handleToggleFavorite}
+                displayAsList={true}
+              />
+            )}
           </div>
         </div>
       </div>

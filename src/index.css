@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -107,12 +108,13 @@
   
   /* Fixed player and navigation layout */
   .fixed-player-area {
-    @apply fixed top-24 left-0 right-0 z-20;
+    @apply fixed left-0 right-0 z-20 mt-24;
     background-color: #000;
+    top: 80px; /* Increased top space */
   }
   
   .player-spacer {
-    @apply pt-[calc(56.25vw*0.32+90px)] md:pt-[calc(56.25vw*0.32*0.8+90px)] lg:pt-[calc(56.25vw*0.32*0.7+90px)] xl:pt-[calc(56.25vw*0.32*0.6+90px)];
+    @apply pt-[calc(56.25vw*0.32+120px)] md:pt-[calc(56.25vw*0.32*0.8+120px)] lg:pt-[calc(56.25vw*0.32*0.7+120px)] xl:pt-[calc(56.25vw*0.32*0.6+120px)];
   }
   
   .fixed-nav-area {
@@ -121,13 +123,13 @@
   }
   
   .nav-spacer {
-    @apply pt-14;
+    @apply pt-16; /* Increased spacing */
   }
   
   .channel-list-container {
-    @apply pt-6 pb-20 overflow-y-auto;
-    height: calc(100vh - 380px);
-    margin-top: 20px;
+    @apply py-6 pb-20 overflow-y-auto;
+    height: calc(100vh - 420px); /* Adjusted height */
+    margin-top: 30px; /* Increased top margin */
   }
 
   .channel-description {
