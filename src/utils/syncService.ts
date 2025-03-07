@@ -1,5 +1,5 @@
 
-// Um serviço simples para sincronizar dados entre diferentes partes da aplicação
+// Um serviço para sincronização de dados entre diferentes partes da aplicação e dispositivos
 
 // Usamos um sistema de eventos personalizado para notificar sobre mudanças
 type EventCallback = () => void;
@@ -12,12 +12,45 @@ class SyncService {
     'channels-updated': []
   };
   
-  // Timestamp da última atualização dos canais
+  // Timestamp da última atualização dos canais - armazenado no localStorage
   private lastChannelUpdate: number = Date.now();
+  private readonly STORAGE_KEY = 'tvzebra-sync-timestamp';
   
   constructor() {
-    // Inicializa o timestamp com o tempo atual
-    this.lastChannelUpdate = Date.now();
+    // Inicializa a partir do localStorage ou com o tempo atual
+    const storedTimestamp = localStorage.getItem(this.STORAGE_KEY);
+    this.lastChannelUpdate = storedTimestamp ? parseInt(storedTimestamp, 10) : Date.now();
+    
+    // Configurar verificação periódica de atualizações no localStorage (para sincronização entre abas)
+    setInterval(() => this.checkLocalStorageUpdates(), 3000);
+    
+    // Adicionar listener para eventos de storage (para sincronização entre abas)
+    window.addEventListener('storage', (event) => {
+      if (event.key === this.STORAGE_KEY) {
+        const newTimestamp = event.newValue ? parseInt(event.newValue, 10) : 0;
+        if (newTimestamp > this.lastChannelUpdate) {
+          this.lastChannelUpdate = newTimestamp;
+          this.notifyListeners();
+        }
+      }
+    });
+  }
+  
+  // Verifica se houve atualizações em outras abas/janelas
+  private checkLocalStorageUpdates(): void {
+    const storedTimestamp = localStorage.getItem(this.STORAGE_KEY);
+    if (storedTimestamp) {
+      const timestamp = parseInt(storedTimestamp, 10);
+      if (timestamp > this.lastChannelUpdate) {
+        this.lastChannelUpdate = timestamp;
+        this.notifyListeners();
+      }
+    }
+  }
+  
+  // Notifica todos os listeners
+  private notifyListeners(): void {
+    this.events['channels-updated'].forEach(callback => callback());
   }
   
   // Registra um ouvinte para o evento de atualização de canais
@@ -33,13 +66,24 @@ class SyncService {
   
   // Notifica que os canais foram atualizados
   public notifyChannelsUpdated(): void {
+    // Gera um novo timestamp
     this.lastChannelUpdate = Date.now();
-    this.events['channels-updated'].forEach(callback => callback());
+    
+    // Atualiza o localStorage para sincronizar entre abas/janelas
+    localStorage.setItem(this.STORAGE_KEY, this.lastChannelUpdate.toString());
+    
+    // Notifica os listeners na aba atual
+    this.notifyListeners();
   }
   
   // Obtém o timestamp da última atualização
   public getLastChannelUpdateTime(): number {
     return this.lastChannelUpdate;
+  }
+  
+  // Obtém o timestamp atual para uso em URLs (cache busting)
+  public getVersionParam(): string {
+    return `v=${this.lastChannelUpdate}`;
   }
 }
 

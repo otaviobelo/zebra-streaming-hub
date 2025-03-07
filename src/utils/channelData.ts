@@ -4,9 +4,10 @@ import { syncService } from './syncService';
 
 // Add IndexedDB for persistent storage
 const DB_NAME = 'tvzebra-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incrementado para incluir suporte a versionamento
 const CHANNELS_STORE = 'channels';
 const FAVORITES_STORE = 'favorites';
+const VERSION_STORE = 'version';
 
 // Setup IndexedDB
 const initDB = (): Promise<IDBDatabase> => {
@@ -34,6 +35,11 @@ const initDB = (): Promise<IDBDatabase> => {
       // Create favorites store
       if (!db.objectStoreNames.contains(FAVORITES_STORE)) {
         db.createObjectStore(FAVORITES_STORE, { keyPath: 'id' });
+      }
+      
+      // Criar store para versão
+      if (!db.objectStoreNames.contains(VERSION_STORE)) {
+        db.createObjectStore(VERSION_STORE, { keyPath: 'id' });
       }
     };
   });
@@ -143,32 +149,65 @@ const defaultChannels: Channel[] = [
 export const getInitialChannels = async (): Promise<Channel[]> => {
   try {
     const db = await initDB();
+    
+    // Verificar se a versão local está atualizada
+    const versionTransaction = db.transaction(VERSION_STORE, 'readonly');
+    const versionStore = versionTransaction.objectStore(VERSION_STORE);
+    const versionRequest = versionStore.get('current');
+    
     return new Promise((resolve) => {
-      const transaction = db.transaction(CHANNELS_STORE, 'readonly');
-      const store = transaction.objectStore(CHANNELS_STORE);
-      const request = store.getAll();
-      
-      request.onsuccess = () => {
-        if (request.result.length > 0) {
-          resolve(request.result);
-        } else {
-          // Fallback to localStorage if no data in IndexedDB
+      versionRequest.onsuccess = () => {
+        const localVersion = versionRequest.result?.timestamp || 0;
+        const currentVersion = syncService.getLastChannelUpdateTime();
+        
+        // Se a versão local for menor que a versão atual, forçar o uso dos
+        // dados padrão e recarregar do localStorage
+        if (!versionRequest.result || localVersion < currentVersion) {
           try {
             const storedChannels = localStorage.getItem('tvzebra-channels');
             const channels = storedChannels ? JSON.parse(storedChannels) : defaultChannels;
             
-            // Initialize IndexedDB with channels from localStorage or defaults
-            saveChannels(channels);
+            // Inicializar IndexedDB com canais atualizados
+            saveChannels(channels, false); // Não notificar para evitar loop
             resolve(channels);
           } catch (error) {
             console.error('Error getting channels from localStorage:', error);
             resolve(defaultChannels);
           }
+        } else {
+          // Se estiver atualizado, usar dados do IndexedDB
+          const transaction = db.transaction(CHANNELS_STORE, 'readonly');
+          const store = transaction.objectStore(CHANNELS_STORE);
+          const request = store.getAll();
+          
+          request.onsuccess = () => {
+            if (request.result.length > 0) {
+              resolve(request.result);
+            } else {
+              // Fallback to localStorage if no data in IndexedDB
+              try {
+                const storedChannels = localStorage.getItem('tvzebra-channels');
+                const channels = storedChannels ? JSON.parse(storedChannels) : defaultChannels;
+                
+                // Initialize IndexedDB with channels from localStorage or defaults
+                saveChannels(channels, false);
+                resolve(channels);
+              } catch (error) {
+                console.error('Error getting channels from localStorage:', error);
+                resolve(defaultChannels);
+              }
+            }
+          };
+          
+          request.onerror = () => {
+            console.error('Error reading channels from IndexedDB');
+            resolve(defaultChannels);
+          };
         }
       };
       
-      request.onerror = () => {
-        console.error('Error reading channels from IndexedDB');
+      versionRequest.onerror = () => {
+        console.error('Error reading version from IndexedDB');
         resolve(defaultChannels);
       };
     });
@@ -187,7 +226,7 @@ export const getInitialChannels = async (): Promise<Channel[]> => {
 };
 
 // Save channels to IndexedDB and localStorage as backup
-export const saveChannels = async (channels: Channel[]): Promise<void> => {
+export const saveChannels = async (channels: Channel[], notify: boolean = true): Promise<void> => {
   try {
     // Ensure all channels have channel numbers
     const channelsWithNumbers = channels.map((channel, index) => {
@@ -202,8 +241,9 @@ export const saveChannels = async (channels: Channel[]): Promise<void> => {
     
     // Save to IndexedDB
     const db = await initDB();
-    const transaction = db.transaction(CHANNELS_STORE, 'readwrite');
+    const transaction = db.transaction([CHANNELS_STORE, VERSION_STORE], 'readwrite');
     const store = transaction.objectStore(CHANNELS_STORE);
+    const versionStore = transaction.objectStore(VERSION_STORE);
     
     // Clear existing data
     store.clear();
@@ -213,10 +253,17 @@ export const saveChannels = async (channels: Channel[]): Promise<void> => {
       store.add(channel);
     });
     
+    // Atualizar a versão no IndexedDB
+    const currentTime = Date.now();
+    versionStore.put({ id: 'current', timestamp: currentTime });
+    
     transaction.oncomplete = () => {
       console.log('Channels saved to IndexedDB successfully');
+      
       // Notificar que os canais foram atualizados
-      syncService.notifyChannelsUpdated();
+      if (notify) {
+        syncService.notifyChannelsUpdated();
+      }
     };
     
     transaction.onerror = (event) => {

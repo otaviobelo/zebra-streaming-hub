@@ -84,8 +84,16 @@ const Index = () => {
   useEffect(() => {
     // Registrar listener para atualizações de canais
     const unsubscribe = syncService.onChannelsUpdated(() => {
+      console.log('Channels updated notification received');
       // Atualizar o timestamp para forçar uma atualização
       setLastUpdate(syncService.getLastChannelUpdateTime());
+      
+      // Mostrar notificação de atualização
+      toast({
+        title: "Canais atualizados",
+        description: "A lista de canais foi atualizada com as últimas alterações",
+        duration: 3000,
+      });
       
       // Carregar canais atualizados
       loadChannelsByCategory();
@@ -96,6 +104,7 @@ const Index = () => {
       // Verificar se há atualizações comparando o timestamp atual com o último conhecido
       const currentUpdateTime = syncService.getLastChannelUpdateTime();
       if (currentUpdateTime > lastUpdate) {
+        console.log('Update detected via polling:', currentUpdateTime, 'vs', lastUpdate);
         setLastUpdate(currentUpdateTime);
         loadChannelsByCategory();
       }
@@ -106,7 +115,7 @@ const Index = () => {
       unsubscribe();
       clearInterval(pollingInterval);
     };
-  }, [lastUpdate, loadChannelsByCategory]);
+  }, [lastUpdate, loadChannelsByCategory, toast]);
 
   // Efeito para recarregar quando a categoria ou busca mudar
   useEffect(() => {
