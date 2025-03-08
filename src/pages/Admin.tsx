@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tv, PlusCircle, LogOut, Pencil, Trash2 } from 'lucide-react';
@@ -60,9 +59,7 @@ const Admin = () => {
     
     loadChannels();
     
-    // Registrar para atualizações de canais
     const unsubscribe = syncService.onChannelsUpdated(async () => {
-      // Recarregar canais quando houver mudanças
       await loadChannels();
     });
     
@@ -146,8 +143,6 @@ const Admin = () => {
         duration: 3000,
       });
       
-      // Notificar que os canais mudaram (isso já é feito em deleteChannel via saveChannels)
-      // O syncService notificará outras partes do aplicativo
     } catch (error) {
       console.error('Error deleting channel:', error);
       toast({
@@ -166,7 +161,6 @@ const Admin = () => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form
     if (!formData.name || !formData.streamUrl || !formData.category) {
       toast({
         title: "Erro ao processar canal",
@@ -181,7 +175,6 @@ const Admin = () => {
     
     try {
       if (editMode && selectedChannelId) {
-        // Update existing channel
         const updatedChannels = await updateChannel(selectedChannelId, {
           name: formData.name,
           streamUrl: formData.streamUrl,
@@ -199,7 +192,6 @@ const Admin = () => {
           duration: 3000,
         });
       } else {
-        // Add new channel
         const newChannel = {
           name: formData.name,
           streamUrl: formData.streamUrl,
@@ -217,9 +209,6 @@ const Admin = () => {
           description: `${formData.name} foi adicionado com sucesso`,
           duration: 3000,
         });
-        
-        // Notificar que os canais mudaram (isso já é feito em addChannel via saveChannels)
-        // O syncService notificará outras partes do aplicativo
       }
     } catch (error) {
       console.error('Error processing channel:', error);
@@ -231,17 +220,14 @@ const Admin = () => {
       });
     } finally {
       setIsLoading(false);
-      // Reset form
       resetForm();
     }
   };
 
-  // Check if we've reached the channel limit
   const channelLimitReached = channels.length >= 1000 && !editMode;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border py-3">
         <div className="tv-container">
           <div className="flex items-center justify-between">
@@ -320,7 +306,6 @@ const Admin = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {/* Add/Edit channel form */}
               <div className="md:col-span-1">
                 <div className="bg-card p-6 rounded-lg border border-border shadow-sm sticky top-24">
                   <div className="flex items-center space-x-2 mb-4">
@@ -451,7 +436,6 @@ const Admin = () => {
                 </div>
               </div>
               
-              {/* Channels list */}
               <div className="md:col-span-2">
                 <h2 className="text-xl font-semibold mb-4">Canais ({channels.length}/1000)</h2>
                 
@@ -521,7 +505,6 @@ const Admin = () => {
         </div>
       </div>
 
-      {/* Delete confirmation dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -543,7 +526,6 @@ const Admin = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Footer */}
       <footer className="py-6 border-t border-border mt-auto">
         <div className="tv-container">
           <div className="text-center text-sm text-muted-foreground">

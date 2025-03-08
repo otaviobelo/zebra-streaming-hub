@@ -1,4 +1,3 @@
-
 import { Channel, Category, AdminCredentials } from '@/lib/types';
 import { syncService } from './syncService';
 
@@ -56,8 +55,8 @@ export const categories: Category[] = [
 ];
 
 export const adminCredentials: AdminCredentials = {
-  username: "GOLFINHO",
-  password: "ZEBRA"
+  username: "galodoido",
+  password: "galodoido"
 };
 
 // Default channels with correct logoUrl and channel numbers

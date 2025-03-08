@@ -265,6 +265,14 @@ const Index = () => {
         <div className="tv-container">
           <div className="text-center text-sm text-muted-foreground">
             <p>© {new Date().getFullYear()} TV Zebra. Todos os direitos reservados.</p>
+            <div className="mt-2">
+              <Link 
+                to="/admin" 
+                className="text-primary hover:underline transition-colors"
+              >
+                Acessar Painel Administrativo
+              </Link>
+            </div>
           </div>
         </div>
       </footer>
