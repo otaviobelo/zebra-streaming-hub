@@ -59,6 +59,11 @@ export const adminCredentials: AdminCredentials = {
   password: "galodoido"
 };
 
+export const admin2Credentials: AdminCredentials = {
+  username: "admin",
+  password: "admin"
+};
+
 // Default channels with correct logoUrl and channel numbers
 const defaultChannels: Channel[] = [
   {

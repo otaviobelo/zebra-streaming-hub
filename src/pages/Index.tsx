@@ -265,12 +265,18 @@ const Index = () => {
         <div className="tv-container">
           <div className="text-center text-sm text-muted-foreground">
             <p>© {new Date().getFullYear()} TV Zebra. Todos os direitos reservados.</p>
-            <div className="mt-2">
+            <div className="mt-2 flex flex-col items-center space-y-1">
               <Link 
                 to="/admin" 
                 className="text-primary hover:underline transition-colors"
               >
                 Acessar Painel Administrativo
+              </Link>
+              <Link 
+                to="/admin2" 
+                className="text-primary hover:underline transition-colors"
+              >
+                Acessar Painel Administrativo Secundário
               </Link>
             </div>
           </div>
