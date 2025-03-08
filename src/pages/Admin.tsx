@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tv, PlusCircle, LogOut, Pencil, Trash2, Upload } from 'lucide-react';
 import { adminCredentials, addChannel, getChannelsWithFavorites, saveChannels, deleteChannel, updateChannel } from '@/utils/channelData';
 import { syncService } from '@/utils/syncService';
 import { AdminCredentials, Channel } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
-import M3UImporter from '@/components/M3UImporter';
+import M3UImporter, { M3UImporterRef } from '@/components/M3UImporter';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +29,7 @@ const Admin = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [channelToDelete, setChannelToDelete] = useState<Channel | null>(null);
   const [activeTab, setActiveTab] = useState<string>("manage");
+  const importerRef = useRef<M3UImporterRef>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -246,7 +247,6 @@ const Admin = () => {
   };
 
   const handleDirectImport = async () => {
-    const importerRef = React.createRef<any>();
     if (importerRef.current) {
       importerRef.current.handleDirectImport(sampleM3UContent);
     }
@@ -262,7 +262,7 @@ https://raw.githubusercontent.com/ipstreet312/freeiptv/master/ressources/btv/py/
 https://raw.githubusercontent.com/ipstreet312/freeiptv/master/ressources/ftv/py/frin.m3u8
 #EXTINF:-1 tvg-logo="https://i.ibb.co/ZBqk6mK/lemedia.jpg",LE MÉDIA TV
 https://raw.githubusercontent.com/BG47510/tube/refs/heads/main/lemedia.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/drk4BWw/tv5inf.png",TV5MONDE INFO
+#EXTINF:-1 tvg-logo="https://i.ibb.co/hrk4BWw/tv5inf.png",TV5MONDE INFO
 https://ott.tv5monde.com/Content/HLS/Live/channel(info)/index.m3u8
 #EXTINF:-1 tvg-logo="https://i.ibb.co/hKP8X8B/f24.png",FRANCE 24 FR
 https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8

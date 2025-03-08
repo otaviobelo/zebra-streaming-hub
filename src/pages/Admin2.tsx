@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Tv, PlusCircle, LogOut, Pencil, Trash2, Upload } from 'lucide-react';
 import { 
@@ -12,7 +12,7 @@ import {
 import { syncService } from '@/utils/syncService';
 import { AdminCredentials, Channel } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
-import M3UImporter from '@/components/M3UImporter';
+import M3UImporter, { M3UImporterRef } from '@/components/M3UImporter';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +36,7 @@ const Admin2 = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [channelToDelete, setChannelToDelete] = useState<Channel | null>(null);
   const [activeTab, setActiveTab] = useState<string>("manage");
+  const importerRef = useRef<M3UImporterRef>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -234,8 +235,6 @@ const Admin2 = () => {
     }
   };
 
-  const channelLimitReached = channels.length >= 1000 && !editMode;
-
   const handleImportComplete = async () => {
     setIsLoading(true);
     try {
@@ -255,7 +254,6 @@ const Admin2 = () => {
   };
 
   const handleDirectImport = async () => {
-    const importerRef = React.createRef<any>();
     if (importerRef.current) {
       importerRef.current.handleDirectImport(sampleM3UContent);
     }
@@ -271,28 +269,6 @@ https://raw.githubusercontent.com/ipstreet312/freeiptv/master/ressources/btv/py/
 https://raw.githubusercontent.com/ipstreet312/freeiptv/master/ressources/ftv/py/frin.m3u8
 #EXTINF:-1 tvg-logo="https://i.ibb.co/ZBqk6mK/lemedia.jpg",LE MÉDIA TV
 https://raw.githubusercontent.com/BG47510/tube/refs/heads/main/lemedia.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/VxLFYSj/euronews.png",EURONEWS FR
-https://euronews-live-fre-fr.fast.rakuten.tv/v1/master/0547f18649bd788bec7b67b746e47670f558b6b2/production-LiveChannel-6564/bitok/e/26032/euronews-fr.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/drk4BWw/tv5inf.png",TV5MONDE INFO
-https://ott.tv5monde.com/Content/HLS/Live/channel(info)/index.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/hKP8X8B/f24.png",FRANCE 24 FR
-https://live.france24.com/hls/live/2037179/F24_FR_HI_HLS/master_5000.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/rkv3Nvq/lcpan.png",LCP-AN
-https://raw.githubusercontent.com/ipstreet312/freeiptv/refs/heads/master/ressources/dmotion/py/lcpan/lcp1.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/2jG942b/publicsn.png",PUBLIC-SÉNAT
-https://raw.githubusercontent.com/Paradise-91/ParaTV/main/streams/publicsenat/publicsenat-dm.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/ChVvjpF/bfmgr.jpg",BFM GRAND REPORTAGES
-https://ncdn-live-bfm.pfd.sfr.net/shls/LIVE$BFM_GRANDSREPORTAGES/index.m3u8?start=LIVE&end=END
-#EXTINF:-1 tvg-logo="https://i.ibb.co/k4Bs0Cj/rmcti.jpg",RMC TALK INFO
-https://dvvyqyxwlc4tn.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-n5yqxqrvnujl7/index.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/5j6DZrt/20mn.png",20 MINUTES TV IDF
-https://live-20minutestv.digiteka.com/1961167769/index.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/hcPj99k/fgro.png",LE FIGARO IDF
-https://static.lefigaro.fr/secom/tnt.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/hcPj99k/fgro.png",LE FIGARO LIVE
-https://d358c6mfrono1y.cloudfront.net/v1/manifest/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-0ppx9nh29jpk7-prod/fa5bf751-4c1a-465b-97bd-1fa62e8a7d00/2.m3u8
-#EXTINF:-1 tvg-logo="https://i.ibb.co/j68q1Bp/i24.png",i24 NEWS FR
-https://bcovlive-a.akamaihd.net/41814196d97e433fb401c5e632d985e9/eu-central-1/5377161796001/playlist.m3u8
 #EXTINF:-1 tvg-logo="https://i.ibb.co/ZgqnqnJ/cgtnfr.png",CGTN FRANÇAIS
 http://news.cgtn.com/resource/live/french/cgtn-f.m3u8
 #EXTINF:-1 tvg-logo="https://i.ibb.co/nR2HsVr/ln24.png",LN24 BE
@@ -303,6 +279,8 @@ https://webtv.monacoinfo.com/live/prod/index.m3u8
 https://rcavlive.akamaized.net/hls/live/704025/xcanrdi/master.m3u8
 #EXTINF:-1 tvg-logo="https://i.ibb.co/pdnMrZn/a24.png",AFRICA 24 FR
 https://africa24.vedge.infomaniak.com/livecast/ik:africa24/manifest.m3u8`;
+
+  const channelLimitReached = channels.length >= 1000 && !editMode;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

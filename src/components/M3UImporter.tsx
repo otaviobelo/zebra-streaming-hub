@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import { Upload, FileUp, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,12 +14,23 @@ interface M3UImporterProps {
   onImportComplete?: () => void;
 }
 
-const M3UImporter: React.FC<M3UImporterProps> = ({ onImportComplete }) => {
+export interface M3UImporterRef {
+  handleDirectImport: (m3uContent: string) => Promise<void>;
+}
+
+const M3UImporter = forwardRef<M3UImporterRef, M3UImporterProps>(({ onImportComplete }, ref) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [processedChannels, setProcessedChannels] = useState<Omit<Channel, "id" | "isFavorite" | "channelNumber">[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { toast } = useToast();
+
+  // Expose methods to parent component via ref
+  useImperativeHandle(ref, () => ({
+    handleDirectImport: async (m3uContent: string) => {
+      await handleDirectImport(m3uContent);
+    }
+  }));
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -258,6 +269,9 @@ const M3UImporter: React.FC<M3UImporterProps> = ({ onImportComplete }) => {
       </CardFooter>
     </Card>
   );
-};
+});
+
+// Set display name for debugging
+M3UImporter.displayName = 'M3UImporter';
 
 export default M3UImporter;
