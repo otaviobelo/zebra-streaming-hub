@@ -95,6 +95,10 @@ const M3UImporter = forwardRef<M3UImporterRef, M3UImporterProps>(({ onImportComp
       
       await Promise.all(importPromises);
       
+      // Forçar salvamento para garantir que todos os canais estejam persistidos
+      const updatedChannels = await Promise.all(importPromises);
+      await saveChannels(updatedChannels[updatedChannels.length - 1], true);
+      
       // Explicitamente notificar que os canais foram atualizados
       syncService.notifyChannelsUpdated();
       
@@ -143,7 +147,9 @@ const M3UImporter = forwardRef<M3UImporterRef, M3UImporterProps>(({ onImportComp
         addChannel(channel)
       );
       
-      await Promise.all(importPromises);
+      // Aguardar todas as adições e obter o último resultado para salvar
+      const updatedChannels = await Promise.all(importPromises);
+      await saveChannels(updatedChannels[updatedChannels.length - 1], true);
       
       // Explicitamente notificar que os canais foram atualizados
       syncService.notifyChannelsUpdated();

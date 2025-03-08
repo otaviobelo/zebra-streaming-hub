@@ -22,7 +22,7 @@ class SyncService {
     this.lastChannelUpdate = storedTimestamp ? parseInt(storedTimestamp, 10) : Date.now();
     
     // Configurar verificação periódica de atualizações no localStorage (para sincronização entre abas)
-    setInterval(() => this.checkLocalStorageUpdates(), 1000); // Reduzindo o intervalo para 1 segundo
+    setInterval(() => this.checkLocalStorageUpdates(), 1000); // Usando intervalo de 1 segundo para detecção mais rápida
     
     // Adicionar listener para eventos de storage (para sincronização entre abas)
     window.addEventListener('storage', (event) => {
@@ -53,7 +53,13 @@ class SyncService {
   // Notifica todos os listeners
   private notifyListeners(): void {
     console.log('Notifying listeners about channel updates');
-    this.events['channels-updated'].forEach(callback => callback());
+    this.events['channels-updated'].forEach(callback => {
+      try {
+        callback();
+      } catch (error) {
+        console.error('Error in channel update listener:', error);
+      }
+    });
   }
   
   // Registra um ouvinte para o evento de atualização de canais
