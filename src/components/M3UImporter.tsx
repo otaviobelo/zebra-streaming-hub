@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { processM3UContent } from '@/utils/m3uParser';
 import { addChannel, saveChannels } from '@/utils/channelData';
+import { syncService } from '@/utils/syncService';
 import { Channel } from '@/lib/types';
 
 interface M3UImporterProps {
@@ -94,6 +95,9 @@ const M3UImporter = forwardRef<M3UImporterRef, M3UImporterProps>(({ onImportComp
       
       await Promise.all(importPromises);
       
+      // Explicitamente notificar que os canais foram atualizados
+      syncService.notifyChannelsUpdated();
+      
       toast({
         title: "Importação concluída",
         description: `${processedChannels.length} canais foram importados com sucesso.`,
@@ -140,6 +144,9 @@ const M3UImporter = forwardRef<M3UImporterRef, M3UImporterProps>(({ onImportComp
       );
       
       await Promise.all(importPromises);
+      
+      // Explicitamente notificar que os canais foram atualizados
+      syncService.notifyChannelsUpdated();
       
       toast({
         title: "Importação direta concluída",

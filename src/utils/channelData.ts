@@ -261,20 +261,25 @@ export const saveChannels = async (channels: Channel[], notify: boolean = true):
     const currentTime = Date.now();
     versionStore.put({ id: 'current', timestamp: currentTime });
     
-    transaction.oncomplete = () => {
-      console.log('Channels saved to IndexedDB successfully');
+    return new Promise((resolve, reject) => {
+      transaction.oncomplete = () => {
+        console.log('Channels saved to IndexedDB successfully');
+        
+        // Notificar que os canais foram atualizados
+        if (notify) {
+          syncService.notifyChannelsUpdated();
+        }
+        resolve();
+      };
       
-      // Notificar que os canais foram atualizados
-      if (notify) {
-        syncService.notifyChannelsUpdated();
-      }
-    };
-    
-    transaction.onerror = (event) => {
-      console.error('Error saving channels to IndexedDB:', transaction.error);
-    };
+      transaction.onerror = (event) => {
+        console.error('Error saving channels to IndexedDB:', transaction.error);
+        reject(transaction.error);
+      };
+    });
   } catch (error) {
     console.error('Error saving channels:', error);
+    throw error;
   }
 };
 
@@ -371,7 +376,7 @@ export const addChannel = async (channel: Omit<Channel, "id" | "isFavorite" | "c
     };
     
     const updatedChannels = [...channels, newChannel];
-    await saveChannels(updatedChannels);
+    await saveChannels(updatedChannels, true); // Explicitly set notify to true
     return updatedChannels;
   } catch (error) {
     console.error('Error adding channel:', error);
