@@ -1,18 +1,65 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>zebra-streaming-hub</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
-    <meta property="og:image" content="/og-image.png" />
-  </head>
+<html lang=\"pt-br\">
+<head>
+  <meta charset=\"UTF-8\">
+  <title>Dados Financeiros Março 2025</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: Arial, sans-serif;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+  </style>
+</head>
+<body>
 
-  <body>
-    <div id="root"></div>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
-    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<table id=\"tabela-financeira\">
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Categoria</th>
+      <th>Descrição</th>
+      <th>Valor</th>
+      <th>Saldo</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+<script>
+  fetch('marco-2025.csv')
+    .then(response => response.text())
+    .then(csv => {
+      const linhas = csv.split('\n');
+      const tbody = document.querySelector('#tabela-financeira tbody');
+
+      linhas.slice(1).forEach(linha => {
+        if (linha.trim()) {
+          const [Data, Categoria, Descricao, Valor, Saldo] = linha.split(';');
+          const row = `<tr>
+            <td>${Data}</td>
+            <td>${Categoria}</td>
+            <td>${Descricao}</td>
+            <td>${Valor}</td>
+            <td>${Saldo}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        }
+      });
+    });
+</script>
+
+</body>
 </html>
